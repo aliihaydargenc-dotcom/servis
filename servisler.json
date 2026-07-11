@@ -1,23 +1,29 @@
 {
-  "meltem": {
-    "ad": "Meltem Servisi",
-    "baslangicSaati": "07:25",
-    "bitisSaati": "08:30",
+  "Meltem": {
+    "ad": "Meltem",
+    "baslangicSaati": "0,295138888888889",
+    "bitisSaati": "0,354166666666667",
     "duraklar": [
-      { "sira": 1, "durakAdi": "KIZILARIK - A 101", "saat": "07:25", "lat": 36.938363, "lng": 30.650559 },
-      { "sira": 2, "durakAdi": "AYTEMİZ PETROL KARŞISI", "saat": "07:27", "lat": 36.917015, "lng": 30.666151 },
-      { "sira": 3, "durakAdi": "MEVLANA BP KARŞISI", "saat": "07:30", "lat": 36.906028, "lng": 30.663048 },
-      { "sira": 4, "durakAdi": "MEVLANA 2. ÜST GEÇİT", "saat": "07:32", "lat": 36.892517, "lng": 30.665552 },
-      { "sira": 5, "durakAdi": "MEYDAN ZİRAAT BANKASI", "saat": "07:33", "lat": 36.892447, "lng": 30.675287 },
-      { "sira": 6, "durakAdi": "VAKIFBANK", "saat": "07:34", "lat": 36.896478, "lng": 30.673420 },
-      { "sira": 7, "durakAdi": "FESTİVAL ÇARŞISI", "saat": "07:40", "lat": 36.896718, "lng": 30.680416 },
-      { "sira": 8, "durakAdi": "KOÇTAŞ", "saat": "07:42", "lat": 36.892310, "lng": 30.680115 },
-      { "sira": 9, "durakAdi": "ASKERİYE", "saat": "07:43", "lat": 36.892602, "lng": 30.684557 },
-      { "sira": 10, "durakAdi": "SHELL PETROL (KÖFTECİ YUSUF) ALTINTAŞ", "saat": "07:55", "lat": 36.893373, "lng": 30.689449 },
-      { "sira": 11, "durakAdi": "KARABULUT OPET", "saat": "07:56", "lat": 36.894797, "lng": 30.693784 },
-      { "sira": 12, "durakAdi": "SAMSUNG BAYİ", "saat": "07:58", "lat": 36.898673, "lng": 30.699663 },
-      { "sira": 13, "durakAdi": "ERMENEK KAV.", "saat": "08:00", "lat": 36.903672, "lng": 30.704888 },
-      { "sira": 14, "durakAdi": "OTEL", "saat": "08:30", "lat": 36.904143, "lng": 30.721550 }
+      { "sira": 1, "durakAdi": "SUR YAPI", "saat": "0,295138888888889", "lat": 36938363, "lng": 30650559 },
+      { "sira": 2, "durakAdi": "MENZ�L 1 S�TES�", "saat": "0,298611111111111", "lat": 36917015, "lng": 30666151 },
+      { "sira": 3, "durakAdi": "K�LT�R  YAN YOL(�o�uk �ube)", "saat": "0,300694444444444", "lat": 36906028, "lng": 30663048 },
+      { "sira": 4, "durakAdi": "MY MOON B�FE", "saat": "0,302083333333333", "lat": 36892517, "lng": 30665552 },
+      { "sira": 5, "durakAdi": "BALIK PAZARI", "saat": "0,303472222222222", "lat": 36892447, "lng": 30675287 },
+      { "sira": 6, "durakAdi": "CARREFOURSA DURA�I", "saat": "0,305555555555556", "lat": 36896478, "lng": 30673420 },
+      { "sira": 7, "durakAdi": "G�LER SAAT �N�", "saat": "0,306944444444444", "lat": 36896718, "lng": 30680416 },
+      { "sira": 8, "durakAdi": "MAL�YE  K��ES�", "saat": "0,307638888888889", "lat": 36892310, "lng": 30680115 },
+      { "sira": 9, "durakAdi": "OF�S MARKET", "saat": "0,308333333333333", "lat": 36892602, "lng": 30684557 },
+      { "sira": 10, "durakAdi": "KENT PASTANES� KAR�ISI", "saat": "0,309722222222222", "lat": 36893373, "lng": 30689449 },
+      { "sira": 11, "durakAdi": "OPERA KAV�AGI", "saat": "0,311111111111111", "lat": 36894797, "lng": 30693784 },
+      { "sira": 12, "durakAdi": "M�GROS KAR�ISI", "saat": "0,3125", "lat": 36898673, "lng": 30699663 },
+      { "sira": 13, "durakAdi": "DEDE O�LU A.V.M", "saat": "0,313194444444444", "lat": 36903672, "lng": 30704888 },
+      { "sira": 14, "durakAdi": "OPET KAR�ISI", "saat": "0,314583333333333", "lat": 36904143, "lng": 30721550 },
+      { "sira": 15, "durakAdi": "KAYAALTI S�TES� �N�", "saat": "0,315972222222222", "lat": 36903371, "lng": 30728416 },
+      { "sira": 16, "durakAdi": "ALYA MARKET", "saat": "0,316666666666667", "lat": 36906320, "lng": 30735111 },
+      { "sira": 17, "durakAdi": "�OK", "saat": "0,318055555555556", "lat": 36910367, "lng": 30738716 },
+      { "sira": 18, "durakAdi": "HAVACILAR S�TES�", "saat": "0,319444444444444", "lat": 36899869, "lng": 30762062 },
+      { "sira": 19, "durakAdi": "HALKAV�A�I", "saat": "0,320833333333333", "lat": 36942389, "lng": 30827036 },
+      { "sira": 20, "durakAdi": "OTEL", "saat": "0,354166666666667", "lat": 36943212, "lng": 30899477 }
     ]
   }
 }
