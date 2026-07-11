@@ -3,179 +3,374 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Servis Navigasyon Yönlendirme</title>
+<title>Servis Navigasyon</title>
 <style>
-  * { box-sizing: border-box; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  
   body {
-    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: #0b1020;
+    color: #eef2f8;
     min-height: 100vh;
+    padding: 16px;
+  }
+  
+  .container {
+    max-width: 480px;
+    margin: 0 auto;
+  }
+  
+  /* Header */
+  .header {
+    text-align: center;
+    padding: 24px 0 16px;
+    border-bottom: 1px solid #26324a;
+    margin-bottom: 20px;
+  }
+  
+  .header-icon {
+    font-size: 48px;
+    margin-bottom: 8px;
+  }
+  
+  .header h1 {
+    font-size: 22px;
+    font-weight: 700;
+    color: #4fd1c5;
+    margin-bottom: 4px;
+  }
+  
+  .header .sub {
+    font-size: 14px;
+    color: #8b98b3;
+  }
+  
+  .header .time-range {
+    display: inline-block;
+    background: #1a2436;
+    border: 1px solid #26324a;
+    border-radius: 20px;
+    padding: 6px 16px;
+    margin-top: 12px;
+    font-size: 13px;
+    color: #f2b880;
+    font-weight: 600;
+  }
+  
+  /* Durak Tablosu */
+  .durak-listesi {
+    margin-bottom: 24px;
+  }
+  
+  .durak-item {
+    display: flex;
+    align-items: center;
+    padding: 12px 14px;
+    background: #111827;
+    border: 1px solid #26324a;
+    border-radius: 10px;
+    margin-bottom: 8px;
+    transition: all 0.2s;
+  }
+  
+  .durak-item:hover {
+    background: #1a2436;
+    border-color: #4fd1c5;
+  }
+  
+  .durak-item.baslangic {
+    border-left: 3px solid #f2b880;
+  }
+  
+  .durak-item.bitis {
+    border-left: 3px solid #f87171;
+  }
+  
+  .durak-sira {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: #4fd1c5;
+    color: #0b1a1a;
+    font-size: 12px;
+    font-weight: 800;
     display: flex;
     align-items: center;
     justify-content: center;
-    background: #0f172a;
-    color: #f1f5f9;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    text-align: center;
-    padding: 24px;
+    flex-shrink: 0;
+    margin-right: 12px;
   }
-  .card { max-width: 380px; }
+  
+  .durak-item.baslangic .durak-sira {
+    background: #f2b880;
+  }
+  
+  .durak-item.bitis .durak-sira {
+    background: #f87171;
+  }
+  
+  .durak-bilgi {
+    flex: 1;
+    min-width: 0;
+  }
+  
+  .durak-ad {
+    font-size: 14px;
+    font-weight: 600;
+    word-break: break-word;
+    line-height: 1.3;
+  }
+  
+  .durak-saat {
+    font-size: 18px;
+    font-weight: 700;
+    color: #4fd1c5;
+    flex-shrink: 0;
+    margin-left: 12px;
+  }
+  
+  .durak-item.baslangic .durak-saat {
+    color: #f2b880;
+  }
+  
+  .durak-item.bitis .durak-saat {
+    color: #f87171;
+  }
+  
+  /* Butonlar */
+  .btn-group {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+  
+  .btn {
+    display: block;
+    width: 100%;
+    padding: 16px;
+    border: none;
+    border-radius: 12px;
+    font-size: 16px;
+    font-weight: 700;
+    text-align: center;
+    text-decoration: none;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  
+  .btn-primary {
+    background: #4fd1c5;
+    color: #0b1a1a;
+  }
+  
+  .btn-primary:hover {
+    filter: brightness(1.1);
+    transform: translateY(-1px);
+  }
+  
+  .btn-secondary {
+    background: transparent;
+    color: #8b98b3;
+    border: 1px solid #26324a;
+  }
+  
+  .btn-secondary:hover {
+    border-color: #4fd1c5;
+    color: #4fd1c5;
+  }
+  
+  /* Footer */
+  .footer {
+    text-align: center;
+    padding: 16px;
+    color: #8b98b3;
+    font-size: 12px;
+    border-top: 1px solid #26324a;
+  }
+  
+  /* Yükleniyor */
+  .loading {
+    text-align: center;
+    padding: 60px 20px;
+  }
+  
   .spinner {
-    width: 44px; height: 44px;
-    border: 4px solid #334155;
-    border-top-color: #38bdf8;
+    width: 40px;
+    height: 40px;
+    border: 3px solid #26324a;
+    border-top-color: #4fd1c5;
     border-radius: 50%;
-    margin: 0 auto 20px;
+    margin: 0 auto 16px;
     animation: spin 0.8s linear infinite;
   }
-  @keyframes spin { to { transform: rotate(360deg); } }
-  h1 { font-size: 1.15rem; margin: 0 0 8px; }
-  p { color: #94a3b8; font-size: 0.9rem; line-height: 1.5; }
-  .btns { margin-top: 20px; display: flex; flex-direction: column; gap: 10px; }
-  a.btn {
-    display: block;
-    background: #38bdf8;
-    color: #0f172a;
-    font-weight: 600;
-    text-decoration: none;
-    padding: 12px 16px;
-    border-radius: 10px;
+  
+  @keyframes spin {
+    to { transform: rotate(360deg); }
   }
-  a.btn.secondary { background: transparent; color: #38bdf8; border: 1px solid #334155; }
-  .error { color: #f87171; }
+  
+  /* Hata */
+  .error {
+    text-align: center;
+    padding: 40px 20px;
+  }
+  
+  .error-icon {
+    font-size: 48px;
+    margin-bottom: 12px;
+  }
+  
+  .error h2 {
+    color: #f87171;
+    font-size: 18px;
+    margin-bottom: 8px;
+  }
+  
+  .error p {
+    color: #8b98b3;
+    font-size: 14px;
+  }
+  
+  /* Responsive */
+  @media (max-width: 360px) {
+    .durak-ad {
+      font-size: 13px;
+    }
+    .durak-saat {
+      font-size: 16px;
+    }
+  }
 </style>
 </head>
 <body>
-  <div class="card">
-    <div class="spinner" id="spinner"></div>
-    <h1 id="title">Servis rotanız hazırlanıyor…</h1>
-    <p id="subtitle">Harita uygulamanız birazdan açılacak.</p>
-    <div class="btns" id="manualBtns" style="display:none;"></div>
+
+<div class="container" id="app">
+  <div class="loading">
+    <div class="spinner"></div>
+    <p style="color: #8b98b3;">Servis bilgileri yükleniyor…</p>
   </div>
+</div>
 
 <script>
-(function () {
-  var DATA_URL = "servisler.json"; // Aynı klasördeki JSON dosyası
+(function() {
+  var DATA_URL = "servisler.json";
+  var app = document.getElementById("app");
 
-  var titleEl = document.getElementById("title");
-  var subtitleEl = document.getElementById("subtitle");
-  var spinnerEl = document.getElementById("spinner");
-  var btnsEl = document.getElementById("manualBtns");
-
-  function showManual(links) {
-    spinnerEl.style.display = "none";
-    btnsEl.style.display = "flex";
-    btnsEl.innerHTML = "";
-    links.forEach(function (l) {
-      var a = document.createElement("a");
-      a.href = l.href;
-      a.className = "btn" + (l.secondary ? " secondary" : "");
-      a.textContent = l.label;
-      btnsEl.appendChild(a);
-    });
-  }
-
-  function fail(msg) {
-    spinnerEl.style.display = "none";
-    titleEl.textContent = "Yönlendirme yapılamadı";
-    titleEl.classList.add("error");
-    subtitleEl.textContent = msg;
-  }
-
-  // --- 1. URL parametresini al ---
+  // URL parametresini al
   var params = new URLSearchParams(window.location.search);
   var servisKodu = (params.get("servis") || "").trim().toLowerCase();
 
   if (!servisKodu) {
-    fail("QR kod bağlantısında '?servis=...' parametresi eksik.");
+    showError("Servis parametresi eksik", "URL'de ?servis=meltem gibi bir parametre gerekiyor.");
     return;
   }
 
-  // --- 2. Cihaz tespiti ---
-  var ua = navigator.userAgent || navigator.vendor || window.opera;
-  var isIOS = /iPad|iPhone|iPod/.test(ua) && !window.MSStream;
-  var isAndroid = /Android/i.test(ua);
-
-  // --- 3. Servis verisini çek ---
+  // Veriyi çek
   fetch(DATA_URL, { cache: "no-store" })
-    .then(function (res) {
-      if (!res.ok) throw new Error("JSON yüklenemedi");
+    .then(function(res) {
+      if (!res.ok) throw new Error("Veri yüklenemedi");
       return res.json();
     })
-    .then(function (data) {
+    .then(function(data) {
       var servis = data[servisKodu];
       if (!servis || !servis.duraklar || servis.duraklar.length === 0) {
-        fail("'" + servisKodu + "' adında tanımlı bir servis rotası bulunamadı.");
+        showError("Servis bulunamadı", "'" + servisKodu + "' kodlu servis tanımlı değil.");
         return;
       }
-
-      // Durakları sıra numarasına göre sırala
-      var duraklar = servis.duraklar.slice().sort(function (a, b) {
+      
+      // Durakları sırala
+      var duraklar = servis.duraklar.slice().sort(function(a, b) {
         return a.sira - b.sira;
       });
-
-      titleEl.textContent = servis.ad + " rotası açılıyor…";
-
-      var links = buildLinks(duraklar);
-      // Otomatik yönlendirme dene
-      redirect(links, isIOS, isAndroid);
-      // Otomatik yönlendirme engellenirse (pop-up engelleyici vb.) 1.2sn sonra manuel butonları göster
-      setTimeout(function () {
-        showManual([
-          { href: links.google, label: "Google Haritalar'da Aç" },
-          { href: links.apple, label: "Apple Haritalar'da Aç", secondary: true }
-        ]);
-      }, 1200);
+      
+      renderSayfa(servis, duraklar);
     })
-    .catch(function (err) {
-      fail("Rota verisi okunamadı: " + err.message);
+    .catch(function(err) {
+      showError("Bağlantı hatası", err.message);
     });
 
-  // --- Deep link üretici ---
-  function buildLinks(duraklar) {
-    var son = duraklar[duraklar.length - 1];
-    var araDuraklar = duraklar.slice(0, duraklar.length - 1); // ilk durak = origin kabul edilir
-    var origin = duraklar[0];
-
-    // GOOGLE MAPS — resmi "Directions API" URL şeması, çoklu waypoint destekler.
-    // Universal link olduğu için: Android/iOS'ta Google Maps kurulu ise uygulamayı,
-    // kurulu değilse tarayıcıda tam rota çizimi olan web sürümünü açar.
-    var waypointsParam = araDuraklar
-      .slice(1) // origin'i tekrar waypoint olarak eklememek için
-      .map(function (d) { return d.lat + "," + d.lng; })
-      .join("|");
-
+  function renderSayfa(servis, duraklar) {
+    var baslangic = duraklar[0];
+    var bitis = duraklar[duraklar.length - 1];
+    
+    // Deep link oluştur
+    var ua = navigator.userAgent || "";
+    var isIOS = /iPad|iPhone|iPod/.test(ua) && !window.MSStream;
+    
+    var origin = baslangic.lat + "," + baslangic.lng;
+    var destination = bitis.lat + "," + bitis.lng;
+    var waypoints = duraklar.slice(1, -1).map(function(d) {
+      return d.lat + "," + d.lng;
+    }).join("|");
+    
     var googleUrl = "https://www.google.com/maps/dir/?api=1"
-      + "&origin=" + origin.lat + "," + origin.lng
-      + "&destination=" + son.lat + "," + son.lng
-      + (waypointsParam ? "&waypoints=" + encodeURIComponent(waypointsParam) : "")
+      + "&origin=" + origin
+      + "&destination=" + destination
+      + (waypoints ? "&waypoints=" + encodeURIComponent(waypoints) : "")
       + "&travelmode=driving";
-
-    // APPLE MAPS — maps.apple.com URL şeması resmi olarak ARA DURAK desteklemez,
-    // yalnızca tek bir başlangıç (saddr) ve tek bir varış (daddr) kabul eder.
-    // Bu yüzden en gerçekçi çözüm: son durağı hedef, ilk durağı başlangıç olarak
-    // vermek (ara duraklar Apple Haritalar'da gösterilemez).
-    var appleUrl = "https://maps.apple.com/?saddr=" + origin.lat + "," + origin.lng
-      + "&daddr=" + son.lat + "," + son.lng
+    
+    var appleUrl = "https://maps.apple.com/?saddr=" + origin
+      + "&daddr=" + destination
       + "&dirflg=d";
 
-    return { google: googleUrl, apple: appleUrl };
+    // HTML oluştur
+    var html = "";
+    
+    // Header
+    html += '<div class="header">';
+    html += '<div class="header-icon">🚌</div>';
+    html += '<h1>' + escapeHtml(servis.ad) + '</h1>';
+    html += '<div class="sub">' + duraklar.length + ' duraklı rota</div>';
+    html += '<div class="time-range">🕐 ' + escapeHtml(servis.baslangicSaati || baslangic.saat) + ' - ' + escapeHtml(servis.bitisSaati || bitis.saat) + '</div>';
+    html += '</div>';
+    
+    // Durak listesi
+    html += '<div class="durak-listesi">';
+    duraklar.forEach(function(d, i) {
+      var cls = "durak-item";
+      if (i === 0) cls += " baslangic";
+      else if (i === duraklar.length - 1) cls += " bitis";
+      
+      html += '<div class="' + cls + '">';
+      html += '<div class="durak-sira">' + d.sira + '</div>';
+      html += '<div class="durak-bilgi">';
+      html += '<div class="durak-ad">' + escapeHtml(d.durakAdi) + '</div>';
+      html += '</div>';
+      html += '<div class="durak-saat">' + escapeHtml(d.saat || "--:--") + '</div>';
+      html += '</div>';
+    });
+    html += '</div>';
+    
+    // Butonlar
+    html += '<div class="btn-group">';
+    html += '<a class="btn btn-primary" href="' + googleUrl + '">🗺 Google Haritalar\'da Aç</a>';
+    if (isIOS) {
+      html += '<a class="btn btn-secondary" href="' + appleUrl + '">🍎 Apple Haritalar\'da Aç</a>';
+    }
+    html += '</div>';
+    
+    // Footer
+    html += '<div class="footer">QR kodu okutarak bu sayfaya ulaştınız.<br>Harita uygulamanızda navigasyona hazır rota açılacaktır.</div>';
+    
+    app.innerHTML = html;
   }
 
-  function redirect(links, isIOS, isAndroid) {
-    if (isIOS) {
-      // iOS: Apple Haritalar ara durak desteklemediği için, tam rotayı gösterebilen
-      // Google Maps universal linkini tercih ediyoruz (Google Maps kuruluysa uygulama
-      // açılır, değilse web'de tam rota gösterilir). Sadece Apple Haritalar'ı native
-      // olarak açmak isterseniz aşağıdaki satırı links.apple ile değiştirin.
-      window.location.href = links.google;
-    } else if (isAndroid) {
-      window.location.href = links.google;
-    } else {
-      // Masaüstü / tanımlanamayan cihaz: doğrudan web'de rotayı göster
-      window.location.href = links.google;
-    }
+  function showError(title, msg) {
+    app.innerHTML = 
+      '<div class="error">' +
+      '<div class="error-icon">⚠️</div>' +
+      '<h2>' + escapeHtml(title) + '</h2>' +
+      '<p>' + escapeHtml(msg) + '</p>' +
+      '</div>';
+  }
+
+  function escapeHtml(text) {
+    var div = document.createElement("div");
+    div.textContent = text;
+    return div.innerHTML;
   }
 })();
 </script>
+
 </body>
 </html>
