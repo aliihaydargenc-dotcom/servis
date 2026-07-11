@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Servis Navigasyon Yönlendirme</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #0f172a;
+    color: #f1f5f9;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    text-align: center;
+    padding: 24px;
+  }
+  .card { max-width: 380px; }
+  .spinner {
+    width: 44px; height: 44px;
+    border: 4px solid #334155;
+    border-top-color: #38bdf8;
+    border-radius: 50%;
+    margin: 0 auto 20px;
+    animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  h1 { font-size: 1.15rem; margin: 0 0 8px; }
+  p { color: #94a3b8; font-size: 0.9rem; line-height: 1.5; }
+  .btns { margin-top: 20px; display: flex; flex-direction: column; gap: 10px; }
+  a.btn {
+    display: block;
+    background: #38bdf8;
+    color: #0f172a;
+    font-weight: 600;
+    text-decoration: none;
+    padding: 12px 16px;
+    border-radius: 10px;
+  }
+  a.btn.secondary { background: transparent; color: #38bdf8; border: 1px solid #334155; }
+  .error { color: #f87171; }
+</style>
+</head>
+<body>
+  <div class="card">
+    <div class="spinner" id="spinner"></div>
+    <h1 id="title">Servis rotanız hazırlanıyor…</h1>
+    <p id="subtitle">Harita uygulamanız birazdan açılacak.</p>
+    <div class="btns" id="manualBtns" style="display:none;"></div>
+  </div>
+
+<script>
+(function () {
+  var DATA_URL = "servisler.json"; // Aynı klasördeki JSON dosyası
+
+  var titleEl = document.getElementById("title");
+  var subtitleEl = document.getElementById("subtitle");
+  var spinnerEl = document.getElementById("spinner");
+  var btnsEl = document.getElementById("manualBtns");
+
+  function showManual(links) {
+    spinnerEl.style.display = "none";
+    btnsEl.style.display = "flex";
+    btnsEl.innerHTML = "";
+    links.forEach(function (l) {
+      var a = document.createElement("a");
+      a.href = l.href;
+      a.className = "btn" + (l.secondary ? " secondary" : "");
+      a.textContent = l.label;
+      btnsEl.appendChild(a);
+    });
+  }
+
+  function fail(msg) {
+    spinnerEl.style.display = "none";
+    titleEl.textContent = "Yönlendirme yapılamadı";
+    titleEl.classList.add("error");
+    subtitleEl.textContent = msg;
+  }
+
+  // --- 1. URL parametresini al ---
+  var params = new URLSearchParams(window.location.search);
+  var servisKodu = (params.get("servis") || "").trim().toLowerCase();
+
+  if (!servisKodu) {
+    fail("QR kod bağlantısında '?servis=...' parametresi eksik.");
+    return;
+  }
+
+  // --- 2. Cihaz tespiti ---
+  var ua = navigator.userAgent || navigator.vendor || window.opera;
+  var isIOS = /iPad|iPhone|iPod/.test(ua) && !window.MSStream;
+  var isAndroid = /Android/i.test(ua);
+
+  // --- 3. Servis verisini çek ---
+  fetch(DATA_URL, { cache: "no-store" })
+    .then(function (res) {
+      if (!res.ok) throw new Error("JSON yüklenemedi");
+      return res.json();
+    })
+    .then(function (data) {
+      var servis = data[servisKodu];
+      if (!servis || !servis.duraklar || servis.duraklar.length === 0) {
+        fail("'" + servisKodu + "' adında tanımlı bir servis rotası bulunamadı.");
+        return;
+      }
+
+      // Durakları sıra numarasına göre sırala
+      var duraklar = servis.duraklar.slice().sort(function (a, b) {
+        return a.sira - b.sira;
+      });
+
+      titleEl.textContent = servis.ad + " rotası açılıyor…";
+
+      var links = buildLinks(duraklar);
+      // Otomatik yönlendirme dene
+      redirect(links, isIOS, isAndroid);
+      // Otomatik yönlendirme engellenirse (pop-up engelleyici vb.) 1.2sn sonra manuel butonları göster
+      setTimeout(function () {
+        showManual([
+          { href: links.google, label: "Google Haritalar'da Aç" },
+          { href: links.apple, label: "Apple Haritalar'da Aç", secondary: true }
+        ]);
+      }, 1200);
+    })
+    .catch(function (err) {
+      fail("Rota verisi okunamadı: " + err.message);
+    });
+
+  // --- Deep link üretici ---
+  function buildLinks(duraklar) {
+    var son = duraklar[duraklar.length - 1];
+    var araDuraklar = duraklar.slice(0, duraklar.length - 1); // ilk durak = origin kabul edilir
+    var origin = duraklar[0];
+
+    // GOOGLE MAPS — resmi "Directions API" URL şeması, çoklu waypoint destekler.
+    // Universal link olduğu için: Android/iOS'ta Google Maps kurulu ise uygulamayı,
+    // kurulu değilse tarayıcıda tam rota çizimi olan web sürümünü açar.
+    var waypointsParam = araDuraklar
+      .slice(1) // origin'i tekrar waypoint olarak eklememek için
+      .map(function (d) { return d.lat + "," + d.lng; })
+      .join("|");
+
+    var googleUrl = "https://www.google.com/maps/dir/?api=1"
+      + "&origin=" + origin.lat + "," + origin.lng
+      + "&destination=" + son.lat + "," + son.lng
+      + (waypointsParam ? "&waypoints=" + encodeURIComponent(waypointsParam) : "")
+      + "&travelmode=driving";
+
+    // APPLE MAPS — maps.apple.com URL şeması resmi olarak ARA DURAK desteklemez,
+    // yalnızca tek bir başlangıç (saddr) ve tek bir varış (daddr) kabul eder.
+    // Bu yüzden en gerçekçi çözüm: son durağı hedef, ilk durağı başlangıç olarak
+    // vermek (ara duraklar Apple Haritalar'da gösterilemez).
+    var appleUrl = "https://maps.apple.com/?saddr=" + origin.lat + "," + origin.lng
+      + "&daddr=" + son.lat + "," + son.lng
+      + "&dirflg=d";
+
+    return { google: googleUrl, apple: appleUrl };
+  }
+
+  function redirect(links, isIOS, isAndroid) {
+    if (isIOS) {
+      // iOS: Apple Haritalar ara durak desteklemediği için, tam rotayı gösterebilen
+      // Google Maps universal linkini tercih ediyoruz (Google Maps kuruluysa uygulama
+      // açılır, değilse web'de tam rota gösterilir). Sadece Apple Haritalar'ı native
+      // olarak açmak isterseniz aşağıdaki satırı links.apple ile değiştirin.
+      window.location.href = links.google;
+    } else if (isAndroid) {
+      window.location.href = links.google;
+    } else {
+      // Masaüstü / tanımlanamayan cihaz: doğrudan web'de rotayı göster
+      window.location.href = links.google;
+    }
+  }
+})();
+</script>
+</body>
+</html>

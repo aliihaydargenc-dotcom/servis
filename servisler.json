@@ -1,0 +1,31 @@
+{
+  "servis": {
+    "ad": "Ýsimsiz Servis",
+    "duraklar": [
+      { "sira": 1, "durakAdi": "SURYAPI Satýþ Ofisi", "lat": 36938363, "lng": 30650559 },
+      { "sira": 2, "durakAdi": "Yeni Doðan Mahallesi", "lat": 36917015, "lng": 30666151 },
+      { "sira": 3, "durakAdi": "Dumlupýnar Bulvarý", "lat": 36906028, "lng": 30663048 },
+      { "sira": 4, "durakAdi": "Meltem Bulvarý", "lat": 36892517, "lng": 30665552 },
+      { "sira": 5, "durakAdi": "Deneme", "lat": 36892447, "lng": 30675287 },
+      { "sira": 6, "durakAdi": "Deneme", "lat": 36896478, "lng": 30673420 },
+      { "sira": 7, "durakAdi": "Deneme", "lat": 36896718, "lng": 30680416 },
+      { "sira": 8, "durakAdi": "Deneme", "lat": 36892310, "lng": 30680115 },
+      { "sira": 9, "durakAdi": "Deneme", "lat": 36892602, "lng": 30684557 },
+      { "sira": 10, "durakAdi": "Deneme", "lat": 36893373, "lng": 30689449 },
+      { "sira": 11, "durakAdi": "Deneme", "lat": 36894797, "lng": 30693784 },
+      { "sira": 12, "durakAdi": "Deneme", "lat": 36898673, "lng": 30699663 },
+      { "sira": 13, "durakAdi": "Deneme", "lat": 36903672, "lng": 30704888 },
+      { "sira": 14, "durakAdi": "Deneme", "lat": 36904143, "lng": 30721550 },
+      { "sira": 15, "durakAdi": "Deneme", "lat": 36903371, "lng": 30728416 },
+      { "sira": 16, "durakAdi": "Deneme", "lat": 36906320, "lng": 30735111 },
+      { "sira": 17, "durakAdi": "Deneme", "lat": 36910367, "lng": 30738716 },
+      { "sira": 18, "durakAdi": "Deneme", "lat": 36899869, "lng": 30762062 },
+      { "sira": 19, "durakAdi": "Deneme", "lat": 36942389, "lng": 30827036 },
+      { "sira": 20, "durakAdi": "Deneme", "lat": 36943212, "lng": 30899477 },
+      { "sira": 21, "durakAdi": "Deneme", "lat": 36925838, "lng": 30996552 },
+      { "sira": 22, "durakAdi": "Deneme", "lat": 36870490, "lng": 31006336 },
+      { "sira": 23, "durakAdi": "Deneme", "lat": 36869220, "lng": 31020327 },
+      { "sira": 24, "durakAdi": "Deneme", "lat": 36864347, "lng": 31015563 }
+    ]
+  }
+}
