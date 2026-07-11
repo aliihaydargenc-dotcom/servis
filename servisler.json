@@ -1,31 +1,23 @@
 {
   "meltem": {
     "ad": "Meltem Servisi",
+    "baslangicSaati": "07:25",
+    "bitisSaati": "08:30",
     "duraklar": [
-      { "sira": 1, "durakAdi": "SURYAPI Satış Ofisi", "lat": 36.938363, "lng": 30.650559 },
-      { "sira": 2, "durakAdi": "Yeni Doğan Mahallesi", "lat": 36.917015, "lng": 30.666151 },
-      { "sira": 3, "durakAdi": "Dumlupınar Bulvarı", "lat": 36.906028, "lng": 30.663048 },
-      { "sira": 4, "durakAdi": "Meltem Bulvarı", "lat": 36.892517, "lng": 30.665552 },
-      { "sira": 5, "durakAdi": "Deneme", "lat": 36.892447, "lng": 30.675287 },
-      { "sira": 6, "durakAdi": "Deneme", "lat": 36.896478, "lng": 30.673420 },
-      { "sira": 7, "durakAdi": "Deneme", "lat": 36.896718, "lng": 30.680416 },
-      { "sira": 8, "durakAdi": "Deneme", "lat": 36.892310, "lng": 30.680115 },
-      { "sira": 9, "durakAdi": "Deneme", "lat": 36.892602, "lng": 30.684557 },
-      { "sira": 10, "durakAdi": "Deneme", "lat": 36.893373, "lng": 30.689449 },
-      { "sira": 11, "durakAdi": "Deneme", "lat": 36.894797, "lng": 30.693784 },
-      { "sira": 12, "durakAdi": "Deneme", "lat": 36.898673, "lng": 30.699663 },
-      { "sira": 13, "durakAdi": "Deneme", "lat": 36.903672, "lng": 30.704888 },
-      { "sira": 14, "durakAdi": "Deneme", "lat": 36.904143, "lng": 30.721550 },
-      { "sira": 15, "durakAdi": "Deneme", "lat": 36.903371, "lng": 30.728416 },
-      { "sira": 16, "durakAdi": "Deneme", "lat": 36.906320, "lng": 30.735111 },
-      { "sira": 17, "durakAdi": "Deneme", "lat": 36.910367, "lng": 30.738716 },
-      { "sira": 18, "durakAdi": "Deneme", "lat": 36.899869, "lng": 30.762062 },
-      { "sira": 19, "durakAdi": "Deneme", "lat": 36.942389, "lng": 30.827036 },
-      { "sira": 20, "durakAdi": "Deneme", "lat": 36.943212, "lng": 30.899477 },
-      { "sira": 21, "durakAdi": "Deneme", "lat": 36.925838, "lng": 30.996552 },
-      { "sira": 22, "durakAdi": "Deneme", "lat": 36.870490, "lng": 31.006336 },
-      { "sira": 23, "durakAdi": "Deneme", "lat": 36.869220, "lng": 31.020327 },
-      { "sira": 24, "durakAdi": "Deneme", "lat": 36.864347, "lng": 31.015563 }
+      { "sira": 1, "durakAdi": "KIZILARIK - A 101", "saat": "07:25", "lat": 36.938363, "lng": 30.650559 },
+      { "sira": 2, "durakAdi": "AYTEMİZ PETROL KARŞISI", "saat": "07:27", "lat": 36.917015, "lng": 30.666151 },
+      { "sira": 3, "durakAdi": "MEVLANA BP KARŞISI", "saat": "07:30", "lat": 36.906028, "lng": 30.663048 },
+      { "sira": 4, "durakAdi": "MEVLANA 2. ÜST GEÇİT", "saat": "07:32", "lat": 36.892517, "lng": 30.665552 },
+      { "sira": 5, "durakAdi": "MEYDAN ZİRAAT BANKASI", "saat": "07:33", "lat": 36.892447, "lng": 30.675287 },
+      { "sira": 6, "durakAdi": "VAKIFBANK", "saat": "07:34", "lat": 36.896478, "lng": 30.673420 },
+      { "sira": 7, "durakAdi": "FESTİVAL ÇARŞISI", "saat": "07:40", "lat": 36.896718, "lng": 30.680416 },
+      { "sira": 8, "durakAdi": "KOÇTAŞ", "saat": "07:42", "lat": 36.892310, "lng": 30.680115 },
+      { "sira": 9, "durakAdi": "ASKERİYE", "saat": "07:43", "lat": 36.892602, "lng": 30.684557 },
+      { "sira": 10, "durakAdi": "SHELL PETROL (KÖFTECİ YUSUF) ALTINTAŞ", "saat": "07:55", "lat": 36.893373, "lng": 30.689449 },
+      { "sira": 11, "durakAdi": "KARABULUT OPET", "saat": "07:56", "lat": 36.894797, "lng": 30.693784 },
+      { "sira": 12, "durakAdi": "SAMSUNG BAYİ", "saat": "07:58", "lat": 36.898673, "lng": 30.699663 },
+      { "sira": 13, "durakAdi": "ERMENEK KAV.", "saat": "08:00", "lat": 36.903672, "lng": 30.704888 },
+      { "sira": 14, "durakAdi": "OTEL", "saat": "08:30", "lat": 36.904143, "lng": 30.721550 }
     ]
   }
 }
