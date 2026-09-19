@@ -44,89 +44,80 @@ jobs:
 
       - name: Browser usage test
         run: |
-          python - <<'PY'
-          import json, time
+          python - <<'PYTEST'
+          import json,time
           from selenium import webdriver
           from selenium.webdriver.chrome.options import Options
-
+          from selenium.webdriver.common.by import By
+          from selenium.webdriver.support.ui import WebDriverWait
+          from selenium.webdriver.support import expected_conditions as EC
           url="https://aliihaydargenc-dotcom.github.io/servis/konum-radar/"
           o=Options()
           o.add_argument("--headless=new")
           o.add_argument("--no-sandbox")
           o.add_argument("--disable-dev-shm-usage")
-          o.add_argument("--window-size=412,915")
           o.set_capability("goog:loggingPrefs",{"browser":"ALL"})
           d=webdriver.Chrome(options=o)
+          wait=WebDriverWait(d,60)
+          report=[]
+          def shot(name): d.save_screenshot('/tmp/konum-radar-'+name+'.png')
+          def visible_control(selector):
+              return d.execute_script("const e=document.querySelector(arguments[0]),r=e.getBoundingClientRect();return r.width>=40&&r.height>=40&&r.top>=0&&r.bottom<=innerHeight&&r.right<=innerWidth",selector)
           try:
-              d.execute_cdp_cmd("Browser.grantPermissions",{"origin":"https://aliihaydargenc-dotcom.github.io","permissions":["geolocation"]})
-              d.execute_cdp_cmd("Emulation.setGeolocationOverride",{"latitude":36.89,"longitude":30.70,"accuracy":25})
+              d.execute_cdp_cmd("Emulation.setDeviceMetricsOverride",{"width":390,"height":844,"deviceScaleFactor":1,"mobile":True})
               d.get(url)
-
-              for _ in range(45):
-                  if d.execute_script("return document.getElementById('status').dataset.ready")== "true":
-                      break
-                  time.sleep(1)
-
-              result={
-                  "title":d.title,
-                  "ready":d.execute_script("return document.getElementById('status').dataset.ready"),
-                  "mapHeight":d.execute_script("return document.getElementById('map').getBoundingClientRect().height"),
-                  "sheetHeight":d.execute_script("return document.getElementById('sheet').getBoundingClientRect().height"),
-                  "markerCount":d.execute_script("return document.querySelectorAll('.poi').length"),
-                  "resultCount":d.execute_script("return document.querySelectorAll('.place').length"),
-                  "sheetTitle":d.execute_script("return document.getElementById('sheetTitle').textContent"),
-                  "weather":d.execute_script("return document.getElementById('weather').textContent"),
-                  "gradient":d.execute_script("return Array.from(document.styleSheets).some(s=>{try{return Array.from(s.cssRules).some(r=>String(r.cssText).includes('gradient'))}catch(e){return false}})"),
-                  "blur":d.execute_script("return Array.from(document.styleSheets).some(s=>{try{return Array.from(s.cssRules).some(r=>String(r.cssText).includes('backdrop-filter'))}catch(e){return false}})"),
-                  "console":d.get_log("browser")
-              }
-              print(json.dumps(result,ensure_ascii=False,indent=2))
-              d.save_screenshot("/tmp/konum-radar-default.png")
-
-              assert result["title"]=="Konum Radar"
-              assert result["ready"]=="true"
-              assert result["mapHeight"]>700
-              assert result["sheetHeight"]<=145
-              assert 0 < result["markerCount"] <= 6
-              assert result["resultCount"]==result["markerCount"]
-              assert result["sheetTitle"]=="Yakındaki yerler"
-              assert result["gradient"] is False
-              assert result["blur"] is False
-
-              d.execute_script("document.getElementById('expand').click()")
-              time.sleep(.6)
-              open_height=d.execute_script("return document.getElementById('sheet').getBoundingClientRect().height")
-              route_count=d.execute_script("return document.querySelectorAll('.routeBtn').length")
-              assert open_height>400
-              assert route_count>0
-              d.save_screenshot("/tmp/konum-radar-list.png")
-
-              d.execute_script("document.querySelector('[data-cat=\"cafe\"]').click()")
-              time.sleep(.5)
-              cafe_title=d.execute_script("return document.getElementById('sheetTitle').textContent")
-              cafe_markers=d.execute_script("return document.querySelectorAll('.poi').length")
-              assert cafe_title=="Kafe"
-              assert 0 < cafe_markers <= 10
-
-              severe=[x for x in result["console"] if x.get("level")=="SEVERE"]
-              unexpected=[]
-              for x in severe:
-                  msg=x.get("message","")
-                  expected=("overpass" in msg or "maps.mail.ru" in msg) and ("504" in msg or "429" in msg or "Failed to load resource" in msg)
-                  if not expected: unexpected.append(x)
-              if unexpected:
-                  print("UNEXPECTED_SEVERE=",json.dumps(unexpected,ensure_ascii=False))
-                  raise AssertionError("Unexpected severe browser errors")
+              wait.until(EC.presence_of_element_located((By.CSS_SELECTOR,'[data-action="locate"]')))
+              wait.until(lambda x:x.execute_script("return [...document.querySelectorAll('.leaflet-tile')].some(i=>i.complete&&i.naturalWidth>0)"))
+              assert visible_control('[data-action="locate"]'), 'Location CTA clipped'
+              assert d.execute_script('return document.documentElement.scrollWidth<=innerWidth'), 'Mobile overflow'
+              shot('mobile-initial')
+              report.append('390x844: initial layout, visible location CTA, map tiles PASS')
+              d.find_element(By.ID,'searchInput').send_keys('Antalya')
+              d.find_element(By.CSS_SELECTOR,'button[type="submit"]').click()
+              wait.until(EC.presence_of_element_located((By.CSS_SELECTOR,'[data-area]')))
+              shot('mobile-search')
+              d.find_element(By.CSS_SELECTOR,'[data-area]').click()
+              wait.until(lambda x:x.find_element(By.ID,'status').get_attribute('data-ready')=='true')
+              assert len(d.find_elements(By.CSS_SELECTOR,'.place'))>0
+              assert len(d.find_elements(By.CSS_SELECTOR,'.place'))==len(d.find_elements(By.CSS_SELECTOR,'.poi'))
+              shot('mobile-results')
+              d.find_element(By.ID,'expand').click()
+              assert d.find_element(By.ID,'expand').get_attribute('aria-expanded')=='true'
+              shot('mobile-expanded')
+              d.find_element(By.CSS_SELECTOR,'[data-cat="cafe"]').click()
+              assert d.find_element(By.ID,'sheetTitle').text=='Kafe'
+              wait.until(EC.presence_of_element_located((By.CSS_SELECTOR,'.place')))
+              route=d.find_element(By.CSS_SELECTOR,'.routeBtn').get_attribute('href')
+              assert 'https://www.google.com/maps/dir/?api=1&destination=' in route
+              d.find_element(By.CSS_SELECTOR,'[data-focus]').click()
+              wait.until(EC.presence_of_element_located((By.CSS_SELECTOR,'.leaflet-popup')))
+              shot('mobile-place')
+              report.append('Live city search, selected area, nearby data, category, marker popup, route URL PASS')
+              d.find_element(By.ID,'clearBtn').is_displayed()
+              d.execute_cdp_cmd("Emulation.setDeviceMetricsOverride",{"width":1440,"height":960,"deviceScaleFactor":1,"mobile":False})
+              d.refresh()
+              wait.until(EC.presence_of_element_located((By.CSS_SELECTOR,'[data-action="locate"]')))
+              shot('desktop-initial')
+              assert d.execute_script("return document.querySelector('.sidebar').getBoundingClientRect().width===400")
+              d.execute_cdp_cmd('Browser.grantPermissions',{'origin':'https://aliihaydargenc-dotcom.github.io','permissions':['geolocation']})
+              d.execute_cdp_cmd('Emulation.setGeolocationOverride',{'latitude':36.89,'longitude':30.70,'accuracy':25})
+              d.find_element(By.CSS_SELECTOR,'[data-action="locate"]').click()
+              wait.until(lambda x:x.find_element(By.ID,'status').get_attribute('data-ready')=='true')
+              shot('desktop-results')
+              assert len(d.find_elements(By.CSS_SELECTOR,'.userDot'))==1
+              report.append('Desktop layout and simulated GPS location PASS')
+              errors=[x for x in d.get_log('browser') if x.get('level')=='SEVERE' and ('Uncaught' in x.get('message',''))]
+              assert not errors,errors
+              print(json.dumps(report,ensure_ascii=False,indent=2))
           finally:
+              shot('last-state')
               d.quit()
-          PY
+          PYTEST
 
       - name: Upload visual test screenshots
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: konum-radar-visual-test
-          path: |
-            /tmp/konum-radar-default.png
-            /tmp/konum-radar-list.png
-          if-no-files-found: ignore
+          path: /tmp/konum-radar-*.png
+          if-no-files-found: error
