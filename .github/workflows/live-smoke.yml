@@ -60,7 +60,10 @@ jobs:
           d=webdriver.Chrome(options=o)
           wait=WebDriverWait(d,75)
           report=[]
-          def shot(name): d.save_screenshot('/tmp/konum-radar-'+name+'.png')
+          def shot(name):
+              time.sleep(.4)
+              WebDriverWait(d,15).until(lambda x:x.execute_script("return !document.querySelector('.leaflet-zoom-anim') && [...document.querySelectorAll('img.leaflet-tile')].every(i=>i.complete)"))
+              d.save_screenshot('/tmp/konum-radar-'+name+'.png')
           def visible_control(selector):
               return d.execute_script("const e=document.querySelector(arguments[0]),r=e.getBoundingClientRect();return r.width>=40&&r.height>=40&&r.top>=0&&r.bottom<=innerHeight&&r.right<=innerWidth",selector)
           try:
@@ -98,6 +101,7 @@ jobs:
               d.find_element(By.CSS_SELECTOR,'[data-focus]').click()
               wait.until(EC.presence_of_element_located((By.CSS_SELECTOR,'.leaflet-popup')))
               shot('mobile-place')
+              assert d.execute_script("const r=document.querySelector('.leaflet-popup').getBoundingClientRect();return r.top>230&&r.bottom<document.querySelector('.sheet').getBoundingClientRect().top"), 'Popup obscured by mobile controls'
               report.append('Live city search, selected area, nearby data, category, marker popup, route URL PASS')
               d.find_element(By.ID,'searchInput').send_keys('test')
               d.find_element(By.ID,'clearBtn').click()
