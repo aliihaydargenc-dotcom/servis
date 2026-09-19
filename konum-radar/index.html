@@ -2,86 +2,117 @@
 <html lang="tr">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#0f172a">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="theme-color" content="#07111f">
+<meta name="description" content="Konum Radar ile çevrendeki yerleri keşfet, filtrele ve bölgeyi analiz et.">
 <title>Konum Radar</title>
 <link rel="manifest" href="./manifest.webmanifest">
 <link rel="icon" href="./icon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://unpkg.com">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <style>
-:root{--bg:#f4f7fb;--card:#fff;--ink:#0f172a;--muted:#64748b;--line:#e2e8f0;--accent:#0f766e}
-*{box-sizing:border-box}html,body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
-body{min-height:100dvh;padding-bottom:76px}button{font:inherit}
-.top{position:sticky;top:0;z-index:1000;background:rgba(244,247,251,.95);backdrop-filter:blur(14px);padding:12px 14px;border-bottom:1px solid var(--line)}
-.wrap{max-width:760px;margin:auto}.row{display:flex;justify-content:space-between;align-items:center;gap:10px}
-h1{font-size:20px;margin:0}.sub{font-size:12px;color:var(--muted);margin-top:2px}
-.weather{background:#fff;border:1px solid var(--line);border-radius:14px;padding:8px 10px;text-align:right;min-width:96px}.weather b{display:block}.weather span{font-size:11px;color:var(--muted)}
-.controls{padding:12px}.loc{width:100%;border:0;border-radius:16px;background:var(--ink);color:#fff;padding:14px;font-weight:800}
-.chips{display:flex;gap:8px;overflow:auto;padding:12px 0 4px;scrollbar-width:none}.chips::-webkit-scrollbar{display:none}
-.chip{flex:0 0 auto;border:1px solid var(--line);background:#fff;border-radius:999px;padding:9px 12px;font-size:13px;font-weight:750}.chip.active{background:#ccfbf1;border-color:#5eead4;color:#115e59}
-.radius{display:flex;gap:8px;margin-top:8px}.radius button{flex:1;border:1px solid var(--line);background:#fff;padding:9px;border-radius:12px;font-size:12px;font-weight:750}.radius button.active{background:var(--ink);color:#fff}
-.status{font-size:12px;color:var(--muted);padding:8px 2px 0;min-height:26px}
-#map{height:50dvh;min-height:360px;margin:0 12px;border-radius:20px;border:1px solid var(--line);overflow:hidden}
-.panel{padding:12px}.summary{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
-.stat{background:#fff;border:1px solid var(--line);border-radius:16px;padding:12px;text-align:center}.stat b{display:block;font-size:20px}.stat span{font-size:11px;color:var(--muted)}
-.head{display:flex;justify-content:space-between;align-items:end;margin:18px 2px 10px}.head h2{font-size:17px;margin:0}.head span{font-size:12px;color:var(--muted)}
-.list{display:grid;gap:9px}.place{background:#fff;border:1px solid var(--line);border-radius:17px;padding:12px;display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center}
-.place h3{font-size:14px;margin:0 0 4px}.meta{font-size:12px;color:var(--muted)}.icon{border:1px solid var(--line);background:#fff;border-radius:12px;width:40px;height:40px}
-.empty{background:#fff;border:1px dashed #cbd5e1;border-radius:18px;padding:22px;text-align:center;color:var(--muted);font-size:13px}
-.nav{position:fixed;z-index:1200;bottom:0;left:0;right:0;background:rgba(255,255,255,.96);backdrop-filter:blur(18px);border-top:1px solid var(--line);padding:7px 10px 9px;display:flex;gap:6px}
-.nav button{flex:1;border:0;background:transparent;border-radius:14px;padding:10px 8px;font-size:12px;font-weight:800;color:var(--muted)}.nav button.active{background:#ecfeff;color:#0f766e}
-.hidden{display:none!important}.pulse{animation:pulse 1.2s infinite}@keyframes pulse{50%{opacity:.5}}
+:root{--ink:#07111f;--ink2:#102236;--glass:rgba(255,255,255,.91);--line:rgba(15,23,42,.10);--muted:#64748b;--teal:#14b8a6;--teal2:#0f766e;--shadow:0 16px 45px rgba(2,8,23,.18)}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;width:100%;height:100%;overflow:hidden;font-family:Inter,ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:#dce8ec;color:var(--ink)}
+button,input{font:inherit}
+#map{position:fixed;inset:0;z-index:1;background:#dce8ec}
+.leaflet-control-attribution{font-size:8px!important;opacity:.7}
+.leaflet-control-zoom{display:none}
+.topbar{position:fixed;z-index:600;left:12px;right:12px;top:calc(10px + env(safe-area-inset-top));display:grid;grid-template-columns:1fr auto;gap:9px;align-items:center}
+.searchbox{height:52px;border-radius:18px;background:var(--glass);backdrop-filter:blur(18px);box-shadow:var(--shadow);border:1px solid rgba(255,255,255,.75);display:flex;align-items:center;gap:10px;padding:0 14px}
+.logo{width:31px;height:31px;border-radius:11px;background:var(--ink);display:grid;place-items:center;color:#fff;font-size:15px;flex:0 0 auto}
+.searchbox input{border:0;outline:0;background:transparent;width:100%;font-size:14px;color:var(--ink);min-width:0}.searchbox input::placeholder{color:#7b8999}
+.weather{height:52px;min-width:74px;border:1px solid rgba(255,255,255,.75);background:var(--glass);backdrop-filter:blur(18px);box-shadow:var(--shadow);border-radius:18px;padding:7px 10px;text-align:center}
+.weather b{display:block;font-size:16px;line-height:18px}.weather span{font-size:9px;color:var(--muted);white-space:nowrap}
+.chips{position:fixed;z-index:590;top:calc(72px + env(safe-area-inset-top));left:0;right:0;padding:0 12px;display:flex;gap:8px;overflow-x:auto;scrollbar-width:none}.chips::-webkit-scrollbar{display:none}
+.chip{flex:0 0 auto;border:1px solid rgba(255,255,255,.82);background:rgba(255,255,255,.88);backdrop-filter:blur(16px);box-shadow:0 8px 22px rgba(2,8,23,.10);border-radius:999px;padding:9px 12px;font-size:12px;font-weight:800;color:#263548}
+.chip.active{background:var(--ink);color:#fff;border-color:var(--ink)}
+.fab{position:fixed;z-index:610;right:14px;bottom:calc(205px + env(safe-area-inset-bottom));width:52px;height:52px;border:0;border-radius:18px;background:var(--ink);color:#fff;box-shadow:0 14px 30px rgba(2,8,23,.28);font-size:22px;display:grid;place-items:center}
+.fab.loading{animation:pulseBtn 1s infinite}@keyframes pulseBtn{50%{opacity:.62;transform:scale(.96)}}
+.toast{position:fixed;z-index:700;left:50%;top:calc(126px + env(safe-area-inset-top));transform:translateX(-50%) translateY(-8px);max-width:calc(100% - 28px);background:rgba(7,17,31,.92);color:#fff;border-radius:999px;padding:8px 12px;font-size:11px;font-weight:700;opacity:0;pointer-events:none;transition:.25s;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.sheet{position:fixed;z-index:620;left:8px;right:8px;bottom:calc(8px + env(safe-area-inset-bottom));height:190px;background:rgba(250,252,253,.96);backdrop-filter:blur(22px);border:1px solid rgba(255,255,255,.85);border-radius:26px;box-shadow:0 -12px 48px rgba(2,8,23,.18);transition:height .3s cubic-bezier(.2,.8,.2,1);overflow:hidden}
+.sheet.open{height:min(67dvh,650px)}
+.handleWrap{height:26px;display:grid;place-items:center;cursor:pointer}.handle{width:42px;height:5px;border-radius:99px;background:#c5ced7}
+.sheetTop{display:flex;align-items:center;justify-content:space-between;padding:0 15px 8px}.sheetTitle b{font-size:17px;letter-spacing:-.2px}.sheetTitle span{display:block;font-size:11px;color:var(--muted);margin-top:2px}
+.expand{border:0;background:#edf2f5;border-radius:12px;width:38px;height:38px;font-size:17px}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;padding:0 12px 10px}.stat{background:#fff;border:1px solid var(--line);border-radius:15px;padding:8px 10px;text-align:center}.stat b{display:block;font-size:16px}.stat span{font-size:9px;color:var(--muted)}
+.tools{display:flex;gap:7px;padding:0 12px 10px}.radius{display:flex;gap:4px;background:#e9eef2;padding:4px;border-radius:14px;flex:1}.radius button{flex:1;border:0;background:transparent;border-radius:10px;padding:7px 5px;font-size:10px;font-weight:800;color:#637386}.radius button.active{background:#fff;color:var(--ink);box-shadow:0 2px 8px rgba(2,8,23,.08)}
+.favToggle{border:1px solid var(--line);background:#fff;border-radius:14px;padding:0 12px;font-size:12px;font-weight:800}
+.results{height:calc(100% - 166px);overflow-y:auto;padding:0 12px 18px}.results::-webkit-scrollbar{display:none}
+.place{background:#fff;border:1px solid var(--line);border-radius:18px;padding:12px;margin-bottom:8px;display:grid;grid-template-columns:44px 1fr auto;gap:10px;align-items:center}
+.placeIcon{width:44px;height:44px;border-radius:15px;background:#f0f5f6;display:grid;place-items:center;font-size:20px}
+.place h3{font-size:13px;margin:0 0 4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.meta{font-size:10px;color:var(--muted)}
+.star{border:0;background:#f4f7f8;width:38px;height:38px;border-radius:13px;font-size:18px}
+.empty{padding:26px 12px;text-align:center;color:var(--muted);font-size:12px}
+.radarPin{width:28px;height:28px;border-radius:50%;background:#fff;border:6px solid var(--ink);box-shadow:0 0 0 8px rgba(20,184,166,.18),0 0 0 17px rgba(20,184,166,.08);animation:radar 1.8s infinite}@keyframes radar{50%{box-shadow:0 0 0 13px rgba(20,184,166,.15),0 0 0 26px rgba(20,184,166,.04)}}
+.poiMarker{width:34px;height:34px;border-radius:12px;background:#fff;border:1px solid rgba(15,23,42,.10);box-shadow:0 5px 18px rgba(2,8,23,.18);display:grid;place-items:center;font-size:17px}
+.leaflet-div-icon{background:transparent!important;border:0!important}
+.brandTag{position:fixed;z-index:580;left:14px;bottom:calc(205px + env(safe-area-inset-bottom));background:rgba(255,255,255,.86);backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,.8);border-radius:12px;padding:7px 9px;font-size:10px;font-weight:800;color:#3b4b5d}
+@media(min-width:700px){.topbar,.chips{max-width:720px;margin:auto}.sheet{max-width:720px;left:50%;right:auto;transform:translateX(-50%);width:calc(100% - 20px)}}
 </style>
 </head>
 <body>
-<header class="top"><div class="wrap row"><div><h1>Konum Radar</h1><div class="sub">Yakın çevreni tek dokunuşla tara</div></div><div class="weather" id="weather"><b>--°</b><span>Hava bekleniyor</span></div></div></header>
-<main class="wrap">
-<section class="controls">
-<button class="loc" id="locBtn">◎ Konumumu Kullan</button>
-<div class="chips">
-<button class="chip active" data-cat="all">Tümü</button>
-<button class="chip" data-cat="cafe">☕ Kafe</button>
-<button class="chip" data-cat="restaurant">🍽️ Restoran</button>
-<button class="chip" data-cat="supermarket">🛒 Market</button>
-<button class="chip" data-cat="pharmacy">💊 Eczane</button>
-<button class="chip" data-cat="hospital">🏥 Sağlık</button>
-<button class="chip" data-cat="atm">🏧 ATM</button>
-<button class="chip" data-cat="park">🌳 Park</button>
-<button class="chip" data-cat="hotel">🏨 Otel</button>
+<div id="map"></div>
+<div class="topbar">
+  <div class="searchbox"><div class="logo">⌖</div><input id="search" autocomplete="off" placeholder="Kafe, park, eczane ara…"></div>
+  <div class="weather" id="weather"><b>--°</b><span>hava</span></div>
 </div>
-<div class="radius">
-<button data-r="500">500 m</button><button class="active" data-r="1000">1 km</button><button data-r="2000">2 km</button>
+<div class="chips" id="chips">
+  <button class="chip active" data-cat="all">✨ Tümü</button>
+  <button class="chip" data-cat="cafe">☕ Kafe</button>
+  <button class="chip" data-cat="restaurant">🍽️ Yemek</button>
+  <button class="chip" data-cat="supermarket">🛒 Market</button>
+  <button class="chip" data-cat="pharmacy">💊 Eczane</button>
+  <button class="chip" data-cat="hospital">🏥 Sağlık</button>
+  <button class="chip" data-cat="atm">🏧 ATM</button>
+  <button class="chip" data-cat="park">🌳 Park</button>
+  <button class="chip" data-cat="hotel">🏨 Otel</button>
 </div>
-<div class="status" id="status">Konum izni verdiğinde çevrendeki yerler yüklenir.</div>
+<div class="toast" id="toast">Hazır</div>
+<button class="fab" id="locBtn" aria-label="Konumumu bul">◎</button>
+<div class="brandTag">KONUM RADAR</div>
+
+<section class="sheet" id="sheet">
+  <div class="handleWrap" id="handle"><div class="handle"></div></div>
+  <div class="sheetTop">
+    <div class="sheetTitle"><b id="sheetTitle">Çevreni keşfet</b><span id="sheetSub">Konumunu kullanarak yakınındaki yerleri tara</span></div>
+    <button class="expand" id="expand">⌃</button>
+  </div>
+  <div class="stats">
+    <div class="stat"><b id="total">0</b><span>YER</span></div>
+    <div class="stat"><b id="nearest">--</b><span>EN YAKIN</span></div>
+    <div class="stat"><b id="cats">0</b><span>KATEGORİ</span></div>
+  </div>
+  <div class="tools">
+    <div class="radius">
+      <button data-r="500">500 m</button>
+      <button class="active" data-r="1000">1 km</button>
+      <button data-r="2000">2 km</button>
+    </div>
+    <button class="favToggle" id="favToggle">☆ Favoriler</button>
+  </div>
+  <div class="results" id="results"><div class="empty">Konumunu açtığında sonuçlar burada görünür.</div></div>
 </section>
-<section id="mapView"><div id="map"></div></section>
-<section class="panel" id="listView">
-<div class="summary">
-<div class="stat"><b id="total">0</b><span>bulunan yer</span></div>
-<div class="stat"><b id="nearest">--</b><span>en yakın</span></div>
-<div class="stat"><b id="cats">0</b><span>kategori</span></div>
-</div>
-<div class="head"><h2>Yakındakiler</h2><span id="info">Henüz taranmadı</span></div>
-<div class="list" id="places"><div class="empty">Konumunu aç ve çevreni tara.</div></div>
-</section>
-<section class="panel hidden" id="favView"><div class="head"><h2>Favoriler</h2><span>Bu cihazda saklanır</span></div><div class="list" id="favorites"></div></section>
-</main>
-<nav class="nav"><button class="active" data-view="map">🗺️ Harita</button><button data-view="list">📍 Liste</button><button data-view="fav">★ Favoriler</button></nav>
+
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
-var state={lat:null,lon:null,radius:1000,cat:'all',items:[],markers:[],favorites:JSON.parse(localStorage.getItem('kr_favs')||'[]')};
-var labels={cafe:'Kafe',restaurant:'Restoran',supermarket:'Market',pharmacy:'Eczane',hospital:'Sağlık',atm:'ATM',park:'Park',hotel:'Otel',other:'Diğer'};
-var em={cafe:'☕',restaurant:'🍽️',supermarket:'🛒',pharmacy:'💊',hospital:'🏥',atm:'🏧',park:'🌳',hotel:'🏨',other:'📍'};
-var map=L.map('map',{zoomControl:false}).setView([39,35],6);
-L.control.zoom({position:'bottomright'}).addTo(map);
+(function(){
+'use strict';
+if(typeof L==='undefined'){document.getElementById('toast').textContent='Harita kütüphanesi yüklenemedi';document.getElementById('toast').classList.add('show');return;}
+var state={lat:null,lon:null,radius:1000,cat:'all',query:'',items:[],markers:[],showFav:false,favorites:JSON.parse(localStorage.getItem('kr_favs')||'[]')};
+var labels={cafe:'Kafe',restaurant:'Yemek',supermarket:'Market',pharmacy:'Eczane',hospital:'Sağlık',atm:'ATM',park:'Park',hotel:'Otel',other:'Diğer'};
+var icons={cafe:'☕',restaurant:'🍽️',supermarket:'🛒',pharmacy:'💊',hospital:'🏥',atm:'🏧',park:'🌳',hotel:'🏨',other:'📍'};
+var map=L.map('map',{zoomControl:false,attributionControl:true}).setView([36.89,30.70],13);
 L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap'}).addTo(map);
-var me,radiusCircle;
-function q(s){return document.querySelector(s)} function qa(s){return Array.from(document.querySelectorAll(s))}
-function status(t,bad){var e=q('#status');e.textContent=t;e.style.color=bad?'#b91c1c':'#64748b'}
-function dist(a,b,c,d){var R=6371000,p=Math.PI/180,x=(c-a)*p,y=(d-b)*p,A=Math.sin(x/2)*Math.sin(x/2)+Math.cos(a*p)*Math.cos(c*p)*Math.sin(y/2)*Math.sin(y/2);return 2*R*Math.asin(Math.sqrt(A))}
+var meMarker=null,radiusCircle=null,toastTimer=null;
+function q(s){return document.querySelector(s)}
+function qa(s){return Array.from(document.querySelectorAll(s))}
+function escapeHtml(s){return String(s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]})}
+function toast(msg,bad){var el=q('#toast');el.textContent=msg;el.style.background=bad?'rgba(127,29,29,.94)':'rgba(7,17,31,.92)';el.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(function(){el.classList.remove('show')},2600)}
+function distance(a,b,c,d){var R=6371000,p=Math.PI/180,x=(c-a)*p,y=(d-b)*p,A=Math.sin(x/2)*Math.sin(x/2)+Math.cos(a*p)*Math.cos(c*p)*Math.sin(y/2)*Math.sin(y/2);return 2*R*Math.asin(Math.sqrt(A))}
 function fmt(m){return m<1000?Math.round(m)+' m':(m/1000).toFixed(1)+' km'}
-function cat(t){if(t.amenity==='cafe')return'cafe';if(t.amenity==='restaurant'||t.amenity==='fast_food')return'restaurant';if(t.shop==='supermarket'||t.shop==='convenience')return'supermarket';if(t.amenity==='pharmacy')return'pharmacy';if(t.amenity==='hospital'||t.amenity==='clinic')return'hospital';if(t.amenity==='atm')return'atm';if(t.leisure==='park')return'park';if(t.tourism==='hotel'||t.tourism==='hostel')return'hotel';return'other'}
-function overpass(lat,lon,r){return '[out:json][timeout:25];('+
+function category(t){if(t.amenity==='cafe')return'cafe';if(t.amenity==='restaurant'||t.amenity==='fast_food')return'restaurant';if(t.shop==='supermarket'||t.shop==='convenience')return'supermarket';if(t.amenity==='pharmacy')return'pharmacy';if(t.amenity==='hospital'||t.amenity==='clinic')return'hospital';if(t.amenity==='atm')return'atm';if(t.leisure==='park')return'park';if(t.tourism==='hotel'||t.tourism==='hostel')return'hotel';return'other'}
+function makeQuery(lat,lon,r){return '[out:json][timeout:25];('+
 'nwr(around:'+r+','+lat+','+lon+')[\"amenity\"=\"cafe\"];'+
 'nwr(around:'+r+','+lat+','+lon+')[\"amenity\"=\"restaurant\"];'+
 'nwr(around:'+r+','+lat+','+lon+')[\"amenity\"=\"fast_food\"];'+
@@ -94,68 +125,90 @@ function overpass(lat,lon,r){return '[out:json][timeout:25];('+
 'nwr(around:'+r+','+lat+','+lon+')[\"leisure\"=\"park\"];'+
 'nwr(around:'+r+','+lat+','+lon+')[\"tourism\"=\"hotel\"];'+
 'nwr(around:'+r+','+lat+','+lon+')[\"tourism\"=\"hostel\"];);out center tags;'}
-function esc(s){return String(s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]})}
 function ll(el){return el.type==='node'?[el.lat,el.lon]:[el.center&&el.center.lat,el.center&&el.center.lon]}
-async function load(){
- if(state.lat===null)return;status('Çevre taranıyor…');q('#locBtn').classList.add('pulse');
- try{
-  var body=new URLSearchParams({data:overpass(state.lat,state.lon,state.radius)});
-  var res=await fetch('https://overpass-api.de/api/interpreter',{method:'POST',body:body});
-  if(!res.ok)throw new Error(res.status);
-  var data=await res.json(),items=[],seen={};
-  (data.elements||[]).forEach(function(el){
-   var p=ll(el);if(!p||p[0]==null||p[1]==null)return;
-   var c=cat(el.tags||{}),name=(el.tags&& (el.tags.name||el.tags.brand))||labels[c],id=c+'|'+name+'|'+p[0].toFixed(5)+'|'+p[1].toFixed(5);
-   if(seen[id])return;seen[id]=1;
-   items.push({id:id,name:name,cat:c,lat:p[0],lon:p[1],dist:dist(state.lat,state.lon,p[0],p[1])});
-  });
-  state.items=items.sort(function(a,b){return a.dist-b.dist});render();status(state.items.length+' yer bulundu.');
- }catch(e){console.error(e);status('Tarama servisi yanıt vermedi. Tekrar deneyebilirsin.',true)}
- q('#locBtn').classList.remove('pulse');
+function currentItems(){
+ var arr=state.showFav?state.favorites.slice():state.items.slice();
+ if(state.cat!=='all')arr=arr.filter(function(x){return x.cat===state.cat});
+ if(state.query){var s=state.query.toLocaleLowerCase('tr-TR');arr=arr.filter(function(x){return x.name.toLocaleLowerCase('tr-TR').indexOf(s)>=0})}
+ return arr;
 }
-function visible(){return state.cat==='all'?state.items:state.items.filter(function(x){return x.cat===state.cat})}
+function markerIcon(x){return L.divIcon({className:'',html:'<div class="poiMarker">'+icons[x.cat]+'</div>',iconSize:[34,34],iconAnchor:[17,17]})}
 function card(x){
  var isFav=state.favorites.some(function(f){return f.id===x.id});
- return '<div class="place"><div><h3>'+em[x.cat]+' '+esc(x.name)+'</h3><div class="meta">'+labels[x.cat]+' · '+fmt(x.dist)+'</div></div><button class="icon fav-btn" data-id="'+encodeURIComponent(x.id)+'">'+(isFav?'★':'☆')+'</button></div>';
+ return '<div class="place" data-place="'+encodeURIComponent(x.id)+'"><div class="placeIcon">'+icons[x.cat]+'</div><div><h3>'+escapeHtml(x.name)+'</h3><div class="meta">'+labels[x.cat]+' · '+fmt(x.dist)+'</div></div><button class="star fav-btn" data-id="'+encodeURIComponent(x.id)+'">'+(isFav?'★':'☆')+'</button></div>';
 }
 function render(){
- var items=visible();state.markers.forEach(function(m){map.removeLayer(m)});state.markers=[];
- items.slice(0,150).forEach(function(x){var m=L.circleMarker([x.lat,x.lon],{radius:7,weight:2,color:'#0f766e',fillColor:'#14b8a6',fillOpacity:.82}).addTo(map).bindPopup('<b>'+esc(x.name)+'</b><br>'+labels[x.cat]+' · '+fmt(x.dist));state.markers.push(m)});
- q('#total').textContent=items.length;q('#nearest').textContent=items[0]?fmt(items[0].dist):'--';q('#cats').textContent=new Set(items.map(function(x){return x.cat})).size;
- q('#info').textContent=state.cat==='all'?'Tüm kategoriler':labels[state.cat];
- q('#places').innerHTML=items.length?items.slice(0,60).map(card).join(''):'<div class="empty">Bu filtrede sonuç bulunamadı.</div>';renderFavs();
+ var arr=currentItems();
+ state.markers.forEach(function(m){map.removeLayer(m)});state.markers=[];
+ arr.slice(0,100).forEach(function(x){
+   var m=L.marker([x.lat,x.lon],{icon:markerIcon(x)}).addTo(map).bindPopup('<b>'+escapeHtml(x.name)+'</b><br>'+labels[x.cat]+' · '+fmt(x.dist));
+   state.markers.push(m);
+ });
+ q('#total').textContent=arr.length;q('#nearest').textContent=arr[0]?fmt(arr[0].dist):'--';q('#cats').textContent=new Set(arr.map(function(x){return x.cat})).size;
+ q('#sheetTitle').textContent=state.showFav?'Favorilerin':(state.cat==='all'?'Çevrendeki yerler':labels[state.cat]);
+ q('#sheetSub').textContent=state.lat===null?'Konumunu kullanarak yakınındaki yerleri tara':(arr.length+' sonuç · '+fmt(state.radius)+' çevre');
+ q('#results').innerHTML=arr.length?arr.slice(0,60).map(card).join(''):'<div class="empty">'+(state.showFav?'Henüz favori eklemedin.':'Bu filtrede sonuç bulunamadı.')+'</div>';
+ q('#favToggle').textContent=state.showFav?'← Sonuçlar':'☆ Favoriler';
 }
-window.fav=function(id){
- var x=state.items.find(function(i){return i.id===id})||state.favorites.find(function(i){return i.id===id});if(!x)return;
- var i=state.favorites.findIndex(function(f){return f.id===id});if(i>=0)state.favorites.splice(i,1);else state.favorites.push(x);
- localStorage.setItem('kr_favs',JSON.stringify(state.favorites));render();
+async function loadPlaces(){
+ if(state.lat===null)return;
+ q('#locBtn').classList.add('loading');toast('Çevre taranıyor…',false);
+ try{
+   var body=new URLSearchParams({data:makeQuery(state.lat,state.lon,state.radius)});
+   var res=await fetch('https://overpass-api.de/api/interpreter',{method:'POST',body:body});
+   if(!res.ok)throw new Error('HTTP '+res.status);
+   var data=await res.json(),seen={},items=[];
+   (data.elements||[]).forEach(function(el){
+     var p=ll(el);if(!p||p[0]==null||p[1]==null)return;
+     var c=category(el.tags||{}),name=(el.tags&&(el.tags.name||el.tags.brand))||labels[c],id=c+'|'+name+'|'+p[0].toFixed(5)+'|'+p[1].toFixed(5);
+     if(seen[id])return;seen[id]=1;
+     items.push({id:id,name:name,cat:c,lat:p[0],lon:p[1],dist:distance(state.lat,state.lon,p[0],p[1])});
+   });
+   state.items=items.sort(function(a,b){return a.dist-b.dist});state.showFav=false;render();toast(state.items.length+' yer bulundu',false);
+ }catch(e){console.error(e);toast('Tarama servisi yanıt vermedi',true)}
+ q('#locBtn').classList.remove('loading');
 }
-function renderFavs(){q('#favorites').innerHTML=state.favorites.length?state.favorites.map(card).join(''):'<div class="empty">Henüz favori eklemedin.</div>'}
-function wtext(c){if(c===0)return'Açık';if(c<=3)return'Bulutlu';if(c<=48)return'Sisli';if(c<=67)return'Yağışlı';if(c<=77)return'Karlı';if(c<=82)return'Sağanak';return'Fırtınalı'}
-async function weather(){
- try{var u='https://api.open-meteo.com/v1/forecast?latitude='+state.lat+'&longitude='+state.lon+'&current=temperature_2m,weather_code,wind_speed_10m&timezone=auto';var d=await (await fetch(u)).json(),c=d.current;if(c)q('#weather').innerHTML='<b>'+Math.round(c.temperature_2m)+'°</b><span>'+wtext(c.weather_code)+' · '+Math.round(c.wind_speed_10m)+' km/s</span>'}catch(e){}
+async function loadWeather(){
+ try{
+   var url='https://api.open-meteo.com/v1/forecast?latitude='+state.lat+'&longitude='+state.lon+'&current=temperature_2m,weather_code&timezone=auto';
+   var data=await (await fetch(url)).json(),c=data.current;if(!c)return;
+   var txt=c.weather_code===0?'Açık':c.weather_code<=3?'Bulutlu':c.weather_code<=67?'Yağışlı':c.weather_code<=77?'Karlı':'Değişken';
+   q('#weather').innerHTML='<b>'+Math.round(c.temperature_2m)+'°</b><span>'+txt+'</span>';
+ }catch(e){}
+}
+function drawMe(){
+ if(meMarker)map.removeLayer(meMarker);if(radiusCircle)map.removeLayer(radiusCircle);
+ meMarker=L.marker([state.lat,state.lon],{icon:L.divIcon({className:'',html:'<div class="radarPin"></div>',iconSize:[28,28],iconAnchor:[14,14]})}).addTo(map).bindPopup('Buradasın');
+ radiusCircle=L.circle([state.lat,state.lon],{radius:state.radius,color:'#0f766e',weight:1,fillColor:'#14b8a6',fillOpacity:.045}).addTo(map);
+ map.fitBounds(radiusCircle.getBounds(),{paddingTopLeft:[40,125],paddingBottomRight:[40,210]});
 }
 function locate(){
- if(!navigator.geolocation){status('Bu tarayıcı konum özelliğini desteklemiyor.',true);return}
- status('Konum alınıyor…');q('#locBtn').classList.add('pulse');
+ if(!navigator.geolocation){toast('Tarayıcı konumu desteklemiyor',true);return}
+ q('#locBtn').classList.add('loading');toast('Konum alınıyor…',false);
  navigator.geolocation.getCurrentPosition(function(p){
-  state.lat=p.coords.latitude;state.lon=p.coords.longitude;if(me)map.removeLayer(me);if(radiusCircle)map.removeLayer(radiusCircle);
-  me=L.circleMarker([state.lat,state.lon],{radius:9,weight:4,color:'#0f172a',fillColor:'#fff',fillOpacity:1}).addTo(map).bindPopup('Buradasın');
-  radiusCircle=L.circle([state.lat,state.lon],{radius:state.radius,color:'#0f766e',weight:1,fillOpacity:.04}).addTo(map);map.fitBounds(radiusCircle.getBounds(),{padding:[20,20]});
-  q('#locBtn').classList.remove('pulse');weather();load();
- },function(){q('#locBtn').classList.remove('pulse');status('Konum izni verilmedi. Tarayıcıdan konuma izin verip tekrar dokun.',true)},{enableHighAccuracy:true,timeout:12000,maximumAge:60000});
+   state.lat=p.coords.latitude;state.lon=p.coords.longitude;q('#locBtn').classList.remove('loading');drawMe();loadWeather();loadPlaces();
+ },function(e){console.error(e);q('#locBtn').classList.remove('loading');toast('Konum izni gerekli',true)},{enableHighAccuracy:true,timeout:15000,maximumAge:30000});
 }
-document.addEventListener('click',function(e){
- var b=e.target.closest('.fav-btn');
- if(!b)return;
- window.fav(decodeURIComponent(b.dataset.id));
-});
+function toggleSheet(force){
+ var s=q('#sheet'),open=typeof force==='boolean'?force:!s.classList.contains('open');s.classList.toggle('open',open);q('#expand').textContent=open?'⌄':'⌃';
+}
 q('#locBtn').addEventListener('click',locate);
-qa('.chip').forEach(function(b){b.addEventListener('click',function(){qa('.chip').forEach(function(x){x.classList.remove('active')});b.classList.add('active');state.cat=b.dataset.cat;render()})});
-qa('.radius button').forEach(function(b){b.addEventListener('click',function(){qa('.radius button').forEach(function(x){x.classList.remove('active')});b.classList.add('active');state.radius=+b.dataset.r;if(state.lat!==null){if(radiusCircle)map.removeLayer(radiusCircle);radiusCircle=L.circle([state.lat,state.lon],{radius:state.radius,color:'#0f766e',weight:1,fillOpacity:.04}).addTo(map);map.fitBounds(radiusCircle.getBounds(),{padding:[20,20]});load()}})});
-function view(v){qa('.nav button').forEach(function(x){x.classList.toggle('active',x.dataset.view===v)});q('#mapView').classList.toggle('hidden',v!=='map');q('#listView').classList.toggle('hidden',v==='fav');q('#favView').classList.toggle('hidden',v!=='fav');if(v==='map')setTimeout(function(){map.invalidateSize()},100)}
-qa('.nav button').forEach(function(b){b.addEventListener('click',function(){view(b.dataset.view)})});
-renderFavs();if('serviceWorker' in navigator){navigator.serviceWorker.register('./sw.js').catch(function(){});}setTimeout(locate,500);
+q('#handle').addEventListener('click',function(){toggleSheet()});
+q('#expand').addEventListener('click',function(){toggleSheet()});
+q('#search').addEventListener('input',function(e){state.query=e.target.value.trim();render();if(state.query)toggleSheet(true)});
+q('#favToggle').addEventListener('click',function(){state.showFav=!state.showFav;render();toggleSheet(true)});
+qa('.chip').forEach(function(b){b.addEventListener('click',function(){qa('.chip').forEach(function(x){x.classList.remove('active')});b.classList.add('active');state.cat=b.dataset.cat;state.showFav=false;render();toggleSheet(true)})});
+qa('.radius button').forEach(function(b){b.addEventListener('click',function(){qa('.radius button').forEach(function(x){x.classList.remove('active')});b.classList.add('active');state.radius=+b.dataset.r;if(state.lat!==null){drawMe();loadPlaces()}})});
+document.addEventListener('click',function(e){
+ var fav=e.target.closest('.fav-btn');
+ if(fav){e.stopPropagation();var id=decodeURIComponent(fav.dataset.id),x=state.items.find(function(i){return i.id===id})||state.favorites.find(function(i){return i.id===id});if(!x)return;var n=state.favorites.findIndex(function(i){return i.id===id});if(n>=0)state.favorites.splice(n,1);else state.favorites.push(x);localStorage.setItem('kr_favs',JSON.stringify(state.favorites));render();return}
+ var place=e.target.closest('.place');
+ if(place){var pid=decodeURIComponent(place.dataset.place),p=state.items.find(function(i){return i.id===pid})||state.favorites.find(function(i){return i.id===pid});if(p){map.setView([p.lat,p.lon],17);toggleSheet(false)}}
+});
+if('serviceWorker' in navigator){navigator.serviceWorker.register('./sw.js').catch(function(){});}
+render();
+setTimeout(locate,450);
+})();
 </script>
 </body>
 </html>
