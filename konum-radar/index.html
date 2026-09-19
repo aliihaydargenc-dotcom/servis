@@ -30,8 +30,8 @@ button,input{font:inherit}
 .fab{position:fixed;z-index:610;right:14px;bottom:calc(205px + env(safe-area-inset-bottom));width:52px;height:52px;border:0;border-radius:18px;background:var(--ink);color:#fff;box-shadow:0 14px 30px rgba(2,8,23,.28);font-size:22px;display:grid;place-items:center}
 .fab.loading{animation:pulseBtn 1s infinite}@keyframes pulseBtn{50%{opacity:.62;transform:scale(.96)}}
 .toast{position:fixed;z-index:700;left:50%;top:calc(126px + env(safe-area-inset-top));transform:translateX(-50%) translateY(-8px);max-width:calc(100% - 28px);background:rgba(7,17,31,.92);color:#fff;border-radius:999px;padding:8px 12px;font-size:11px;font-weight:700;opacity:0;pointer-events:none;transition:.25s;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
-.sheet{position:fixed;z-index:620;left:8px;right:8px;bottom:calc(8px + env(safe-area-inset-bottom));height:190px;background:rgba(250,252,253,.96);backdrop-filter:blur(22px);border:1px solid rgba(255,255,255,.85);border-radius:26px;box-shadow:0 -12px 48px rgba(2,8,23,.18);transition:height .3s cubic-bezier(.2,.8,.2,1);overflow:hidden}
-.sheet.open{height:min(67dvh,650px)}
+.sheet{position:fixed;z-index:620;left:8px;right:8px;bottom:calc(8px + env(safe-area-inset-bottom));height:300px;background:rgba(250,252,253,.96);backdrop-filter:blur(22px);border:1px solid rgba(255,255,255,.85);border-radius:26px;box-shadow:0 -12px 48px rgba(2,8,23,.18);transition:height .3s cubic-bezier(.2,.8,.2,1);overflow:hidden}
+.sheet.open{height:min(72dvh,690px)}
 .handleWrap{height:26px;display:grid;place-items:center;cursor:pointer}.handle{width:42px;height:5px;border-radius:99px;background:#c5ced7}
 .sheetTop{display:flex;align-items:center;justify-content:space-between;padding:0 15px 8px}.sheetTitle b{font-size:17px;letter-spacing:-.2px}.sheetTitle span{display:block;font-size:11px;color:var(--muted);margin-top:2px}
 .expand{border:0;background:#edf2f5;border-radius:12px;width:38px;height:38px;font-size:17px}
@@ -39,10 +39,13 @@ button,input{font:inherit}
 .tools{display:flex;gap:7px;padding:0 12px 10px}.radius{display:flex;gap:4px;background:#e9eef2;padding:4px;border-radius:14px;flex:1}.radius button{flex:1;border:0;background:transparent;border-radius:10px;padding:7px 5px;font-size:10px;font-weight:800;color:#637386}.radius button.active{background:#fff;color:var(--ink);box-shadow:0 2px 8px rgba(2,8,23,.08)}
 .favToggle{border:1px solid var(--line);background:#fff;border-radius:14px;padding:0 12px;font-size:12px;font-weight:800}
 .results{height:calc(100% - 166px);overflow-y:auto;padding:0 12px 18px}.results::-webkit-scrollbar{display:none}
-.place{background:#fff;border:1px solid var(--line);border-radius:18px;padding:12px;margin-bottom:8px;display:grid;grid-template-columns:44px 1fr auto;gap:10px;align-items:center}
+.place{background:#fff;border:1px solid var(--line);border-radius:18px;padding:12px;margin-bottom:8px;display:grid;grid-template-columns:44px 1fr;gap:10px;align-items:center}
 .placeIcon{width:44px;height:44px;border-radius:15px;background:#f0f5f6;display:grid;place-items:center;font-size:20px}
 .place h3{font-size:13px;margin:0 0 4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.meta{font-size:10px;color:var(--muted)}
-.star{border:0;background:#f4f7f8;width:38px;height:38px;border-radius:13px;font-size:18px}
+.placeActions{grid-column:1/-1;display:grid;grid-template-columns:1fr 1fr 42px;gap:7px;margin-top:2px}
+.actionBtn{border:0;border-radius:12px;padding:9px 10px;font-size:11px;font-weight:850;background:#eef3f5;color:#243446}
+.routeBtn{background:var(--ink);color:#fff}
+.star{border:0;background:#f4f7f8;width:42px;height:36px;border-radius:12px;font-size:17px}
 .empty{padding:26px 12px;text-align:center;color:var(--muted);font-size:12px}
 .radarPin{width:28px;height:28px;border-radius:50%;background:#fff;border:6px solid var(--ink);box-shadow:0 0 0 8px rgba(20,184,166,.18),0 0 0 17px rgba(20,184,166,.08);animation:radar 1.8s infinite}@keyframes radar{50%{box-shadow:0 0 0 13px rgba(20,184,166,.15),0 0 0 26px rgba(20,184,166,.04)}}
 .poiMarker{width:34px;height:34px;border-radius:12px;background:#fff;border:1px solid rgba(15,23,42,.10);box-shadow:0 5px 18px rgba(2,8,23,.18);display:grid;place-items:center;font-size:17px}
@@ -58,7 +61,7 @@ button,input{font:inherit}
   <div class="weather" id="weather"><b>--°</b><span>hava</span></div>
 </div>
 <div class="chips" id="chips">
-  <button class="chip active" data-cat="all">✨ Tümü</button>
+  <button class="chip active" data-cat="nearby">📍 Yakınımda</button>
   <button class="chip" data-cat="cafe">☕ Kafe</button>
   <button class="chip" data-cat="restaurant">🍽️ Yemek</button>
   <button class="chip" data-cat="supermarket">🛒 Market</button>
@@ -81,7 +84,7 @@ button,input{font:inherit}
   <div class="stats">
     <div class="stat"><b id="total">0</b><span>YER</span></div>
     <div class="stat"><b id="nearest">--</b><span>EN YAKIN</span></div>
-    <div class="stat"><b id="cats">0</b><span>KATEGORİ</span></div>
+    <div class="stat"><b id="cats">1 km</b><span>ALAN</span></div>
   </div>
   <div class="tools">
     <div class="radius">
@@ -99,7 +102,7 @@ button,input{font:inherit}
 (function(){
 'use strict';
 if(typeof L==='undefined'){document.getElementById('toast').textContent='Harita kütüphanesi yüklenemedi';document.getElementById('toast').classList.add('show');return;}
-var state={lat:null,lon:null,radius:1000,cat:'all',query:'',items:[],markers:[],showFav:false,favorites:JSON.parse(localStorage.getItem('kr_favs')||'[]')};
+var state={lat:null,lon:null,radius:1000,cat:'nearby',query:'',items:[],markers:[],showFav:false,favorites:JSON.parse(localStorage.getItem('kr_favs')||'[]')};
 var labels={cafe:'Kafe',restaurant:'Yemek',supermarket:'Market',pharmacy:'Eczane',hospital:'Sağlık',atm:'ATM',park:'Park',hotel:'Otel',other:'Diğer'};
 var icons={cafe:'☕',restaurant:'🍽️',supermarket:'🛒',pharmacy:'💊',hospital:'🏥',atm:'🏧',park:'🌳',hotel:'🏨',other:'📍'};
 var map=L.map('map',{zoomControl:false,attributionControl:true}).setView([36.89,30.70],13);
@@ -147,26 +150,61 @@ async function fetchOverpass(query){
 function ll(el){return el.type==='node'?[el.lat,el.lon]:[el.center&&el.center.lat,el.center&&el.center.lon]}
 function currentItems(){
  var arr=state.showFav?state.favorites.slice():state.items.slice();
- if(state.cat!=='all')arr=arr.filter(function(x){return x.cat===state.cat});
- if(state.query){var s=state.query.toLocaleLowerCase('tr-TR');arr=arr.filter(function(x){return x.name.toLocaleLowerCase('tr-TR').indexOf(s)>=0})}
+
+ if(state.query){
+   var s=state.query.toLocaleLowerCase('tr-TR');
+   arr=arr.filter(function(x){
+     return x.name.toLocaleLowerCase('tr-TR').indexOf(s)>=0 ||
+            labels[x.cat].toLocaleLowerCase('tr-TR').indexOf(s)>=0;
+   });
+   if(state.cat!=='nearby' && state.cat!=='all')arr=arr.filter(function(x){return x.cat===state.cat});
+   return arr;
+ }
+
+ if(state.cat==='nearby' && !state.showFav){
+   var picked=[],counts={};
+   arr.forEach(function(x){
+     if(picked.length>=12)return;
+     counts[x.cat]=counts[x.cat]||0;
+     if(counts[x.cat]<2){picked.push(x);counts[x.cat]++;}
+   });
+   if(picked.length<12){
+     arr.forEach(function(x){
+       if(picked.length>=12)return;
+       if(!picked.some(function(p){return p.id===x.id}))picked.push(x);
+     });
+   }
+   return picked;
+ }
+
+ if(state.cat!=='all' && !state.showFav)arr=arr.filter(function(x){return x.cat===state.cat});
  return arr;
 }
 function markerIcon(x){return L.divIcon({className:'',html:'<div class="poiMarker">'+icons[x.cat]+'</div>',iconSize:[34,34],iconAnchor:[17,17]})}
 function card(x){
  var isFav=state.favorites.some(function(f){return f.id===x.id});
- return '<div class="place" data-place="'+encodeURIComponent(x.id)+'"><div class="placeIcon">'+icons[x.cat]+'</div><div><h3>'+escapeHtml(x.name)+'</h3><div class="meta">'+labels[x.cat]+' · '+fmt(x.dist)+'</div></div><button class="star fav-btn" data-id="'+encodeURIComponent(x.id)+'">'+(isFav?'★':'☆')+'</button></div>';
+ var id=encodeURIComponent(x.id);
+ return '<div class="place" data-place="'+id+'">'+
+   '<div class="placeIcon">'+icons[x.cat]+'</div>'+
+   '<div><h3>'+escapeHtml(x.name)+'</h3><div class="meta">'+labels[x.cat]+' · '+fmt(x.dist)+'</div></div>'+
+   '<div class="placeActions">'+
+     '<button class="actionBtn map-btn" data-id="'+id+'">⌖ Haritada</button>'+
+     '<button class="actionBtn routeBtn route-btn" data-id="'+id+'">Yol tarifi ↗</button>'+
+     '<button class="star fav-btn" data-id="'+id+'">'+(isFav?'★':'☆')+'</button>'+
+   '</div>'+
+ '</div>';
 }
 function render(){
  var arr=currentItems();
  state.markers.forEach(function(m){map.removeLayer(m)});state.markers=[];
- arr.slice(0,100).forEach(function(x){
+ arr.slice(0,state.cat==='nearby'?12:24).forEach(function(x){
    var m=L.marker([x.lat,x.lon],{icon:markerIcon(x)}).addTo(map).bindPopup('<b>'+escapeHtml(x.name)+'</b><br>'+labels[x.cat]+' · '+fmt(x.dist));
    state.markers.push(m);
  });
- q('#total').textContent=arr.length;q('#nearest').textContent=arr[0]?fmt(arr[0].dist):'--';q('#cats').textContent=new Set(arr.map(function(x){return x.cat})).size;
- q('#sheetTitle').textContent=state.showFav?'Favorilerin':(state.cat==='all'?'Çevrendeki yerler':labels[state.cat]);
- q('#sheetSub').textContent=state.lat===null?'Konumunu kullanarak yakınındaki yerleri tara':(arr.length+' sonuç · '+fmt(state.radius)+' çevre');
- q('#results').innerHTML=arr.length?arr.slice(0,60).map(card).join(''):'<div class="empty">'+(state.showFav?'Henüz favori eklemedin.':'Bu filtrede sonuç bulunamadı.')+'</div>';
+ q('#total').textContent=arr.length;q('#nearest').textContent=arr[0]?fmt(arr[0].dist):'--';q('#cats').textContent=fmt(state.radius);
+ q('#sheetTitle').textContent=state.showFav?'Favorilerin':(state.cat==='nearby'?'Yakındaki öneriler':labels[state.cat]);
+ q('#sheetSub').textContent=state.lat===null?'Konumunu kullanarak yakınındaki yerleri tara':(state.cat==='nearby'?'En yakın ve farklı türlerden seçilmiş yerler':arr.length+' sonuç · '+fmt(state.radius)+' çevre');
+ q('#results').innerHTML=arr.length?arr.slice(0,state.cat==='nearby'?12:40).map(card).join(''):'<div class="empty">'+(state.showFav?'Henüz favori eklemedin.':'Bu filtrede sonuç bulunamadı.')+'</div>';
  q('#favToggle').textContent=state.showFav?'← Sonuçlar':'☆ Favoriler';
 }
 async function loadPlaces(){
@@ -181,7 +219,7 @@ async function loadPlaces(){
      if(seen[id])return;seen[id]=1;
      items.push({id:id,name:name,cat:c,lat:p[0],lon:p[1],dist:distance(state.lat,state.lon,p[0],p[1])});
    });
-   state.items=items.sort(function(a,b){return a.dist-b.dist});state.showFav=false;render();toast(state.items.length+' yer bulundu',false);
+   state.items=items.sort(function(a,b){return a.dist-b.dist});state.showFav=false;render();toast('Yakınındaki seçenekler hazır',false);
  }catch(e){console.error(e);toast('Tarama servisi yanıt vermedi',true)}
  q('#locBtn').classList.remove('loading');
 }
@@ -214,9 +252,23 @@ q('#handle').addEventListener('click',function(){toggleSheet()});
 q('#expand').addEventListener('click',function(){toggleSheet()});
 q('#search').addEventListener('input',function(e){state.query=e.target.value.trim();render();if(state.query)toggleSheet(true)});
 q('#favToggle').addEventListener('click',function(){state.showFav=!state.showFav;render();toggleSheet(true)});
-qa('.chip').forEach(function(b){b.addEventListener('click',function(){qa('.chip').forEach(function(x){x.classList.remove('active')});b.classList.add('active');state.cat=b.dataset.cat;state.showFav=false;render();toggleSheet(true)})});
+qa('.chip').forEach(function(b){b.addEventListener('click',function(){qa('.chip').forEach(function(x){x.classList.remove('active')});b.classList.add('active');state.cat=b.dataset.cat;state.showFav=false;render();toggleSheet(state.cat!=='nearby')})});
 qa('.radius button').forEach(function(b){b.addEventListener('click',function(){qa('.radius button').forEach(function(x){x.classList.remove('active')});b.classList.add('active');state.radius=+b.dataset.r;if(state.lat!==null){drawMe();loadPlaces()}})});
 document.addEventListener('click',function(e){
+ var route=e.target.closest('.route-btn');
+ if(route){
+   e.stopPropagation();
+   var rid=decodeURIComponent(route.dataset.id),rp=state.items.find(function(i){return i.id===rid})||state.favorites.find(function(i){return i.id===rid});
+   if(rp)window.open('https://www.google.com/maps/dir/?api=1&destination='+rp.lat+','+rp.lon,'_blank','noopener');
+   return;
+ }
+ var mapBtn=e.target.closest('.map-btn');
+ if(mapBtn){
+   e.stopPropagation();
+   var mid=decodeURIComponent(mapBtn.dataset.id),mp=state.items.find(function(i){return i.id===mid})||state.favorites.find(function(i){return i.id===mid});
+   if(mp){map.setView([mp.lat,mp.lon],17);toggleSheet(false);}
+   return;
+ }
  var fav=e.target.closest('.fav-btn');
  if(fav){e.stopPropagation();var id=decodeURIComponent(fav.dataset.id),x=state.items.find(function(i){return i.id===id})||state.favorites.find(function(i){return i.id===id});if(!x)return;var n=state.favorites.findIndex(function(i){return i.id===id});if(n>=0)state.favorites.splice(n,1);else state.favorites.push(x);localStorage.setItem('kr_favs',JSON.stringify(state.favorites));render();return}
  var place=e.target.closest('.place');
