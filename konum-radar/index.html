@@ -112,19 +112,38 @@ function toast(msg,bad){var el=q('#toast');el.textContent=msg;el.style.backgroun
 function distance(a,b,c,d){var R=6371000,p=Math.PI/180,x=(c-a)*p,y=(d-b)*p,A=Math.sin(x/2)*Math.sin(x/2)+Math.cos(a*p)*Math.cos(c*p)*Math.sin(y/2)*Math.sin(y/2);return 2*R*Math.asin(Math.sqrt(A))}
 function fmt(m){return m<1000?Math.round(m)+' m':(m/1000).toFixed(1)+' km'}
 function category(t){if(t.amenity==='cafe')return'cafe';if(t.amenity==='restaurant'||t.amenity==='fast_food')return'restaurant';if(t.shop==='supermarket'||t.shop==='convenience')return'supermarket';if(t.amenity==='pharmacy')return'pharmacy';if(t.amenity==='hospital'||t.amenity==='clinic')return'hospital';if(t.amenity==='atm')return'atm';if(t.leisure==='park')return'park';if(t.tourism==='hotel'||t.tourism==='hostel')return'hotel';return'other'}
-function makeQuery(lat,lon,r){return '[out:json][timeout:25];('+
-'nwr(around:'+r+','+lat+','+lon+')[\"amenity\"=\"cafe\"];'+
-'nwr(around:'+r+','+lat+','+lon+')[\"amenity\"=\"restaurant\"];'+
-'nwr(around:'+r+','+lat+','+lon+')[\"amenity\"=\"fast_food\"];'+
-'nwr(around:'+r+','+lat+','+lon+')[\"shop\"=\"supermarket\"];'+
-'nwr(around:'+r+','+lat+','+lon+')[\"shop\"=\"convenience\"];'+
-'nwr(around:'+r+','+lat+','+lon+')[\"amenity\"=\"pharmacy\"];'+
-'nwr(around:'+r+','+lat+','+lon+')[\"amenity\"=\"hospital\"];'+
-'nwr(around:'+r+','+lat+','+lon+')[\"amenity\"=\"clinic\"];'+
-'nwr(around:'+r+','+lat+','+lon+')[\"amenity\"=\"atm\"];'+
+var overpassEndpoints=[
+  'https://maps.mail.ru/osm/tools/overpass/api/interpreter',
+  'https://overpass-api.de/api/interpreter',
+  'https://overpass.maprva.org/api/interpreter'
+];
+function makeQuery(lat,lon,r){return '[out:json][timeout:14];('+
+'nwr(around:'+r+','+lat+','+lon+')[\"amenity\"~\"^(cafe|restaurant|fast_food|pharmacy|hospital|clinic|atm)$\"];'+
+'nwr(around:'+r+','+lat+','+lon+')[\"shop\"~\"^(supermarket|convenience)$\"];'+
 'nwr(around:'+r+','+lat+','+lon+')[\"leisure\"=\"park\"];'+
-'nwr(around:'+r+','+lat+','+lon+')[\"tourism\"=\"hotel\"];'+
-'nwr(around:'+r+','+lat+','+lon+')[\"tourism\"=\"hostel\"];);out center tags;'}
+'nwr(around:'+r+','+lat+','+lon+')[\"tourism\"~\"^(hotel|hostel)$\"];);out center tags;'}
+
+async function fetchOverpass(query){
+  var lastError=null;
+  for(var i=0;i<overpassEndpoints.length;i++){
+    var endpoint=overpassEndpoints[i];
+    var controller=new AbortController();
+    var timer=setTimeout(function(){controller.abort()},10000);
+    try{
+      var body=new URLSearchParams({data:query});
+      var res=await fetch(endpoint,{method:'POST',body:body,signal:controller.signal});
+      clearTimeout(timer);
+      if(!res.ok)throw new Error(endpoint+' HTTP '+res.status);
+      var data=await res.json();
+      return {data:data,endpoint:endpoint};
+    }catch(err){
+      clearTimeout(timer);
+      lastError=err;
+      console.warn('Overpass fallback:',endpoint,err&&err.message?err.message:err);
+    }
+  }
+  throw lastError||new Error('Overpass sunucularına ulaşılamadı');
+}
 function ll(el){return el.type==='node'?[el.lat,el.lon]:[el.center&&el.center.lat,el.center&&el.center.lon]}
 function currentItems(){
  var arr=state.showFav?state.favorites.slice():state.items.slice();
@@ -154,10 +173,8 @@ async function loadPlaces(){
  if(state.lat===null)return;
  q('#locBtn').classList.add('loading');toast('Çevre taranıyor…',false);
  try{
-   var body=new URLSearchParams({data:makeQuery(state.lat,state.lon,state.radius)});
-   var res=await fetch('https://overpass-api.de/api/interpreter',{method:'POST',body:body});
-   if(!res.ok)throw new Error('HTTP '+res.status);
-   var data=await res.json(),seen={},items=[];
+   var overpassResult=await fetchOverpass(makeQuery(state.lat,state.lon,state.radius));
+   var data=overpassResult.data,seen={},items=[];
    (data.elements||[]).forEach(function(el){
      var p=ll(el);if(!p||p[0]==null||p[1]==null)return;
      var c=category(el.tags||{}),name=(el.tags&&(el.tags.name||el.tags.brand))||labels[c],id=c+'|'+name+'|'+p[0].toFixed(5)+'|'+p[1].toFixed(5);
