@@ -64,7 +64,7 @@ button{touch-action:manipulation}
 .place h3{margin:0 0 3px;font-size:13px;line-height:16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .meta{font-size:10px;color:var(--muted)}
 .placeActions{display:flex;gap:5px}
-.iconBtn{width:34px;height:34px;border:1px solid var(--line);border-radius:10px;background:#fff;color:#3c4147;font-size:14px;display:grid;place-items:center}
+.iconBtn{width:34px;height:34px;border:1px solid var(--line);border-radius:10px;background:#fff;color:#3c4147;display:grid;place-items:center}.iconBtn svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 .iconBtn.route{background:var(--ink);border-color:var(--ink);color:#fff}
 .empty{padding:26px 12px;text-align:center;color:var(--muted);font-size:12px}
 .permission{padding:4px 13px 13px}
@@ -195,17 +195,40 @@ async function overpass(body){
   throw last||new Error('Veri servisi yanıt vermedi');
 }
 function ll(el){return el.type==='node'?[el.lat,el.lon]:[el.center&&el.center.lat,el.center&&el.center.lon]}
+function farEnough(x,arr,minMeters){
+  return arr.every(function(y){return dist(x.lat,x.lon,y.lat,y.lon)>=minMeters});
+}
 function defaultSet(){
   var out=[],per={};
   state.items.forEach(function(x){
     if(out.length>=6)return;
     per[x.cat]=per[x.cat]||0;
-    if(per[x.cat]<1){out.push(x);per[x.cat]++}
+    if(per[x.cat]<1 && farEnough(x,out,75)){out.push(x);per[x.cat]++}
   });
   if(out.length<6){
     state.items.forEach(function(x){
       if(out.length>=6)return;
-      if(!out.some(function(y){return y.id===x.id}))out.push(x);
+      if(!out.some(function(y){return y.id===x.id}) && farEnough(x,out,55))out.push(x);
+    });
+  }
+  if(out.length<4){
+    state.items.forEach(function(x){
+      if(out.length>=6)return;
+      if(!out.some(function(y){return y.id===x.id}) && farEnough(x,out,30))out.push(x);
+    });
+  }
+  return out;
+}
+function markerSet(arr,limit){
+  var out=[];
+  arr.forEach(function(x){
+    if(out.length>=limit)return;
+    if(farEnough(x,out,55))out.push(x);
+  });
+  if(out.length<Math.min(3,arr.length)){
+    arr.forEach(function(x){
+      if(out.length>=limit)return;
+      if(!out.some(function(y){return y.id===x.id}) && farEnough(x,out,28))out.push(x);
     });
   }
   return out;
@@ -240,14 +263,15 @@ function row(x){
     '<div class="catBadge">'+badge[x.cat]+'</div>'+
     '<div class="placeMain"><h3>'+esc(x.name)+'</h3><div class="meta">'+label[x.cat]+' · '+fmt(x.dist)+'</div></div>'+
     '<div class="placeActions">'+
-      '<button class="iconBtn mapBtn" data-id="'+id+'" aria-label="Haritada göster">⌖</button>'+
-      '<button class="iconBtn route routeBtn" data-id="'+id+'" aria-label="Yol tarifi">↗</button>'+
+      '<button class="iconBtn mapBtn" data-id="'+id+'" aria-label="Haritada göster"><svg viewBox="0 0 24 24"><path d="M12 21s6-5.2 6-11a6 6 0 1 0-12 0c0 5.8 6 11 6 11Z"></path><circle cx="12" cy="10" r="2"></circle></svg></button>'+
+      '<button class="iconBtn route routeBtn" data-id="'+id+'" aria-label="Yol tarifi"><svg viewBox="0 0 24 24"><path d="M7 17 17 7"></path><path d="M9 7h8v8"></path></svg></button>'+
     '</div>'+
   '</div>';
 }
 function drawMarkers(){
   clearMarkers();
-  visible().forEach(function(x){
+  var arr=visible(),pins=markerSet(arr,state.cat==='nearby'&&!state.query?6:8);
+  pins.forEach(function(x){
     var m=L.marker([x.lat,x.lon],{icon:poiIcon(state.selected===x.id)})
       .addTo(map)
       .bindPopup('<b>'+esc(x.name)+'</b><br>'+label[x.cat]+' · '+fmt(x.dist));
@@ -280,8 +304,7 @@ function setSheet(open){
 function drawUser(){
   if(userMarker)map.removeLayer(userMarker);
   userMarker=L.marker([state.lat,state.lon],{icon:userIcon(),zIndexOffset:1000}).addTo(map).bindPopup('Konumun');
-  var bounds=L.latLng(state.lat,state.lon).toBounds(state.radius*2);
-  map.fitBounds(bounds,{paddingTopLeft:[36,118],paddingBottomRight:[36,160]});
+  map.setView([state.lat,state.lon],15);
 }
 async function weather(){
   try{
