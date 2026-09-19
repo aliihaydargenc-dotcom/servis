@@ -66,6 +66,10 @@ jobs:
                   "sheetSub": d.execute_script("return document.getElementById('sheetSub').textContent"),
                   "toast": d.execute_script("return document.getElementById('toast').textContent"),
                   "weather": d.execute_script("return document.getElementById('weather').innerText"),
+                  "sheetTitle": d.execute_script("return document.getElementById('sheetTitle').textContent"),
+                  "markerCount": d.execute_script("return document.querySelectorAll('.poiMarker').length"),
+                  "cardCount": d.execute_script("return document.querySelectorAll('.place').length"),
+                  "routeCount": d.execute_script("return document.querySelectorAll('.route-btn').length"),
                   "console": d.get_log("browser"),
               }
               print(json.dumps(result, ensure_ascii=False, indent=2))
@@ -75,10 +79,23 @@ jobs:
               assert result["leaflet"] == "object"
               assert result["mapHeight"] > 300
               assert result["search"] and result["sheet"]
-              assert int(result["total"]) > 0, "No nearby places loaded"
-              assert "sonuç" in result["sheetSub"], "Results summary missing"
-              assert result["toast"].endswith("yer bulundu"), "Success toast missing"
+              assert 0 < int(result["total"]) <= 12, "Default nearby shortlist is not constrained"
+              assert result["sheetTitle"] == "Yakındaki öneriler", "Wrong default usage mode"
+              assert "En yakın ve farklı türlerden" in result["sheetSub"], "Nearby guidance missing"
+              assert result["toast"] == "Yakınındaki seçenekler hazır", "Success toast missing"
               assert "--°" not in result["weather"], "Weather did not load"
+              assert 0 < result["markerCount"] <= 12, "Too many default map pins"
+              assert result["cardCount"] > 0, "No actionable result cards"
+              assert result["routeCount"] == result["cardCount"], "Route action missing from cards"
+
+              d.execute_script("document.querySelector('[data-cat=\"cafe\"]').click()")
+              time.sleep(1)
+              cafe_title = d.execute_script("return document.getElementById('sheetTitle').textContent")
+              cafe_markers = d.execute_script("return document.querySelectorAll('.poiMarker').length")
+              cafe_cards = d.execute_script("return document.querySelectorAll('.place').length")
+              assert cafe_title == "Kafe", "Category interaction failed"
+              assert 0 < cafe_markers <= 24, "Category map is still overcrowded"
+              assert cafe_cards > 0, "Category results did not render"
 
               severe = [x for x in result["console"] if x.get("level") == "SEVERE"]
               unexpected = []
