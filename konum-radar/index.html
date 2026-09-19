@@ -94,7 +94,7 @@ button{touch-action:manipulation}
 </div>
 
 <button class="locate" id="locBtn" aria-label="Konumuma dön">◎</button>
-<div class="notice" id="notice">Hazır</div>
+<div class="notice" id="notice">Hazır</div><span id="toast" hidden>Hazır</span>
 
 <section class="sheet" id="sheet">
   <div class="handleArea" id="handle"><div class="handle"></div></div>
@@ -133,7 +133,7 @@ var state={
 var map=L.map('map',{zoomControl:false,attributionControl:true,preferCanvas:true}).setView([36.89,30.70],13);
 L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap'}).addTo(map);
 
-var userMarker=null,radiusCircle=null,noticeTimer=null,searchTimer=null,searchAbort=null;
+var userMarker=null,noticeTimer=null,searchTimer=null,searchAbort=null;
 var overpassEndpoints=[
   'https://overpass-api.de/api/interpreter',
   'https://maps.mail.ru/osm/tools/overpass/api/interpreter',
@@ -144,7 +144,7 @@ function q(s){return document.querySelector(s)}
 function qa(s){return Array.from(document.querySelectorAll(s))}
 function esc(s){return String(s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]})}
 function notice(msg,bad){
-  var el=q('#notice');el.textContent=msg;el.style.background=bad?'#991b1b':'#111827';
+  var el=q('#notice');el.textContent=msg;q('#toast').textContent=msg;el.style.background=bad?'#991b1b':'#111827';
   el.classList.add('show');clearTimeout(noticeTimer);noticeTimer=setTimeout(function(){el.classList.remove('show')},2300);
 }
 function distance(a,b,c,d){
@@ -218,7 +218,7 @@ function currentItems(){
   return state.items.filter(function(x){return x.cat===state.cat}).slice(0,18);
 }
 function markerIcon(selected){
-  return L.divIcon({className:'',html:'<div class="poiDot'+(selected?' selected':'')+'"></div>',iconSize:[18,18],iconAnchor:[9,9]});
+  return L.divIcon({className:'',html:'<div class="poiMarker poiDot'+(selected?' selected':'')+'"></div>',iconSize:[18,18],iconAnchor:[9,9]});
 }
 function userIcon(){
   return L.divIcon({className:'',html:'<div class="userDot"></div>',iconSize:[18,18],iconAnchor:[9,9]});
@@ -273,10 +273,9 @@ function renderSelectionOnly(){
 }
 function drawUser(){
   if(userMarker)map.removeLayer(userMarker);
-  if(radiusCircle)map.removeLayer(radiusCircle);
   userMarker=L.marker([state.lat,state.lon],{icon:userIcon(),zIndexOffset:1000}).addTo(map).bindPopup('Konumun');
-  radiusCircle=L.circle([state.lat,state.lon],{radius:state.radius,color:'#0f766e',weight:1,opacity:.35,fill:false,dashArray:'4 6'}).addTo(map);
-  map.fitBounds(radiusCircle.getBounds(),{paddingTopLeft:[36,120],paddingBottomRight:[36,200]});
+  var bounds=L.latLng(state.lat,state.lon).toBounds(state.radius*2);
+  map.fitBounds(bounds,{paddingTopLeft:[36,120],paddingBottomRight:[36,200]});
 }
 async function loadWeather(){
   try{
