@@ -1,0 +1,81 @@
+name: Live Smoke Test
+
+on:
+  push:
+    paths:
+      - ".github/workflows/live-smoke.yml"
+  workflow_dispatch:
+
+jobs:
+  live-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check live HTTP
+        run: |
+          set -euxo pipefail
+          URL="https://aliihaydargenc-dotcom.github.io/servis/konum-radar/"
+          curl -fLsS --retry 3 --retry-delay 2 "$URL" -o /tmp/live.html
+          grep -q "Konum Radar" /tmp/live.html
+          grep -q 'id="map"' /tmp/live.html
+          grep -q "overpass-api.de" /tmp/live.html
+          grep -q "api.open-meteo.com" /tmp/live.html
+          echo "HTTP_OK"
+
+      - name: Install Selenium
+        run: python -m pip install --disable-pip-version-check selenium
+
+      - name: Browser smoke test
+        run: |
+          python - <<'PY'
+          import json, time
+          from selenium import webdriver
+          from selenium.webdriver.chrome.options import Options
+
+          url = "https://aliihaydargenc-dotcom.github.io/servis/konum-radar/"
+          opts = Options()
+          opts.add_argument("--headless=new")
+          opts.add_argument("--no-sandbox")
+          opts.add_argument("--disable-dev-shm-usage")
+          opts.add_argument("--window-size=412,915")
+          opts.set_capability("goog:loggingPrefs", {"browser": "ALL"})
+
+          d = webdriver.Chrome(options=opts)
+          try:
+              d.execute_cdp_cmd("Browser.grantPermissions", {
+                  "origin": "https://aliihaydargenc-dotcom.github.io",
+                  "permissions": ["geolocation"]
+              })
+              d.execute_cdp_cmd("Emulation.setGeolocationOverride", {
+                  "latitude": 36.89,
+                  "longitude": 30.70,
+                  "accuracy": 25
+              })
+              d.get(url)
+              time.sleep(12)
+
+              result = {
+                  "title": d.title,
+                  "readyState": d.execute_script("return document.readyState"),
+                  "leaflet": d.execute_script("return typeof L"),
+                  "mapHeight": d.execute_script("return document.getElementById('map').getBoundingClientRect().height"),
+                  "search": d.execute_script("return !!document.getElementById('search')"),
+                  "sheet": d.execute_script("return !!document.getElementById('sheet')"),
+                  "total": d.execute_script("return document.getElementById('total').textContent"),
+                  "sheetSub": d.execute_script("return document.getElementById('sheetSub').textContent"),
+                  "toast": d.execute_script("return document.getElementById('toast').textContent"),
+                  "console": d.get_log("browser"),
+              }
+              print(json.dumps(result, ensure_ascii=False, indent=2))
+
+              assert result["title"] == "Konum Radar"
+              assert result["readyState"] == "complete"
+              assert result["leaflet"] == "object"
+              assert result["mapHeight"] > 300
+              assert result["search"] and result["sheet"]
+              severe = [x for x in result["console"] if x.get("level") == "SEVERE"]
+              if severe:
+                  print("SEVERE_LOGS=", json.dumps(severe, ensure_ascii=False))
+                  raise AssertionError("Browser console has SEVERE errors")
+          finally:
+              d.quit()
+          PY
