@@ -63,6 +63,7 @@ jobs:
                   "total": d.execute_script("return document.getElementById('total').textContent"),
                   "sheetSub": d.execute_script("return document.getElementById('sheetSub').textContent"),
                   "toast": d.execute_script("return document.getElementById('toast').textContent"),
+                  "weather": d.execute_script("return document.getElementById('weather').innerText"),
                   "console": d.get_log("browser"),
               }
               print(json.dumps(result, ensure_ascii=False, indent=2))
@@ -72,10 +73,24 @@ jobs:
               assert result["leaflet"] == "object"
               assert result["mapHeight"] > 300
               assert result["search"] and result["sheet"]
+              assert int(result["total"]) > 0, "No nearby places loaded"
+              assert "sonuç" in result["sheetSub"], "Results summary missing"
+              assert result["toast"].endswith("yer bulundu"), "Success toast missing"
+              assert "--°" not in result["weather"], "Weather did not load"
+
               severe = [x for x in result["console"] if x.get("level") == "SEVERE"]
-              if severe:
-                  print("SEVERE_LOGS=", json.dumps(severe, ensure_ascii=False))
-                  raise AssertionError("Browser console has SEVERE errors")
+              unexpected = []
+              for x in severe:
+                  msg = x.get("message", "")
+                  expected_overpass_fallback = (
+                      ("overpass" in msg or "maps.mail.ru/osm/tools/overpass" in msg)
+                      and ("504" in msg or "429" in msg or "Failed to load resource" in msg)
+                  )
+                  if not expected_overpass_fallback:
+                      unexpected.append(x)
+              if unexpected:
+                  print("UNEXPECTED_SEVERE_LOGS=", json.dumps(unexpected, ensure_ascii=False))
+                  raise AssertionError("Unexpected browser console errors")
           finally:
               d.quit()
           PY
