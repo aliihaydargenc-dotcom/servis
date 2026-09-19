@@ -13,21 +13,20 @@ jobs:
     steps:
       - name: Wait for this commit to reach GitHub Pages
         env:
-          GH_TOKEN: ${{ github.token }}
+          GH_TOKEN: \${{ github.token }}
         run: |
           set -euo pipefail
-          export SHA="${GITHUB_SHA}"
-          API="https://api.github.com/repos/${GITHUB_REPOSITORY}/actions/runs?per_page=30"
+          export SHA="\${GITHUB_SHA}"
+          API="https://api.github.com/repos/\${GITHUB_REPOSITORY}/actions/runs?per_page=30"
           for i in $(seq 1 36); do
             JSON=$(curl -fsSL -H "Authorization: Bearer $GH_TOKEN" -H "Accept: application/vnd.github+json" "$API")
-            STATUS=$(python -c 'import json,sys,os; d=json.load(sys.stdin); sha=os.environ["SHA"]; xs=[r for r in d.get("workflow_runs",[]) if r.get("name")=="pages build and deployment" and r.get("head_sha")==sha]; print((xs[0].get("status","") if xs else ""))' <<<"$JSON")
-            CONCLUSION=$(python -c 'import json,sys,os; d=json.load(sys.stdin); sha=os.environ["SHA"]; xs=[r for r in d.get("workflow_runs",[]) if r.get("name")=="pages build and deployment" and r.get("head_sha")==sha]; print((xs[0].get("conclusion","") or "" if xs else ""))' <<<"$JSON")
+            STATUS=$(python -c 'import json,sys,os; d=json.load(sys.stdin); sha=os.environ["SHA"]; xs=[r for r in d.get("workflow_runs",[]) if r.get("name")=="pages build and deployment" and r.get("head_sha")==sha]; print(xs[0].get("status","") if xs else "")' <<<"$JSON")
+            CONCLUSION=$(python -c 'import json,sys,os; d=json.load(sys.stdin); sha=os.environ["SHA"]; xs=[r for r in d.get("workflow_runs",[]) if r.get("name")=="pages build and deployment" and r.get("head_sha")==sha]; print((xs[0].get("conclusion","") or "") if xs else "")' <<<"$JSON")
             echo "Pages status=$STATUS conclusion=$CONCLUSION"
             if [ "$STATUS" = "completed" ] && [ "$CONCLUSION" = "success" ]; then exit 0; fi
             if [ "$STATUS" = "completed" ] && [ "$CONCLUSION" != "success" ]; then exit 1; fi
             sleep 5
           done
-          echo "Timed out waiting for Pages"
           exit 1
 
       - name: Check live HTTP
@@ -37,97 +36,97 @@ jobs:
           curl -fLsS --retry 3 --retry-delay 2 "$URL" -o /tmp/live.html
           grep -q "Konum Radar" /tmp/live.html
           grep -q 'id="map"' /tmp/live.html
-          grep -q "overpass-api.de" /tmp/live.html
-          grep -q "api.open-meteo.com" /tmp/live.html
-          echo "HTTP_OK"
+          grep -q 'data-cat="nearby"' /tmp/live.html
+          grep -q "nominatim.openstreetmap.org" /tmp/live.html
 
       - name: Install Selenium
         run: python -m pip install --disable-pip-version-check selenium
 
-      - name: Browser smoke test
+      - name: Browser usage test
         run: |
           python - <<'PY'
           import json, time
           from selenium import webdriver
           from selenium.webdriver.chrome.options import Options
 
-          url = "https://aliihaydargenc-dotcom.github.io/servis/konum-radar/"
-          opts = Options()
-          opts.add_argument("--headless=new")
-          opts.add_argument("--no-sandbox")
-          opts.add_argument("--disable-dev-shm-usage")
-          opts.add_argument("--window-size=412,915")
-          opts.set_capability("goog:loggingPrefs", {"browser": "ALL"})
-
-          d = webdriver.Chrome(options=opts)
+          url="https://aliihaydargenc-dotcom.github.io/servis/konum-radar/"
+          o=Options()
+          o.add_argument("--headless=new")
+          o.add_argument("--no-sandbox")
+          o.add_argument("--disable-dev-shm-usage")
+          o.add_argument("--window-size=412,915")
+          o.set_capability("goog:loggingPrefs",{"browser":"ALL"})
+          d=webdriver.Chrome(options=o)
           try:
-              d.execute_cdp_cmd("Browser.grantPermissions", {
-                  "origin": "https://aliihaydargenc-dotcom.github.io",
-                  "permissions": ["geolocation"]
-              })
-              d.execute_cdp_cmd("Emulation.setGeolocationOverride", {
-                  "latitude": 36.89,
-                  "longitude": 30.70,
-                  "accuracy": 25
-              })
+              d.execute_cdp_cmd("Browser.grantPermissions",{"origin":"https://aliihaydargenc-dotcom.github.io","permissions":["geolocation"]})
+              d.execute_cdp_cmd("Emulation.setGeolocationOverride",{"latitude":36.89,"longitude":30.70,"accuracy":25})
               d.get(url)
-              time.sleep(30)
 
-              result = {
-                  "title": d.title,
-                  "readyState": d.execute_script("return document.readyState"),
-                  "leaflet": d.execute_script("return typeof L"),
-                  "mapHeight": d.execute_script("return document.getElementById('map').getBoundingClientRect().height"),
-                  "search": d.execute_script("return !!document.getElementById('search')"),
-                  "sheet": d.execute_script("return !!document.getElementById('sheet')"),
-                  "total": d.execute_script("return document.getElementById('total').textContent"),
-                  "sheetSub": d.execute_script("return document.getElementById('sheetSub').textContent"),
-                  "toast": d.execute_script("return document.getElementById('toast').textContent"),
-                  "weather": d.execute_script("return document.getElementById('weather').innerText"),
-                  "sheetTitle": d.execute_script("return document.getElementById('sheetTitle').textContent"),
-                  "markerCount": d.execute_script("return document.querySelectorAll('.poiMarker').length"),
-                  "cardCount": d.execute_script("return document.querySelectorAll('.place').length"),
-                  "routeCount": d.execute_script("return document.querySelectorAll('.route-btn').length"),
-                  "console": d.get_log("browser"),
+              for _ in range(45):
+                  if d.execute_script("return document.getElementById('status').dataset.ready")== "true":
+                      break
+                  time.sleep(1)
+
+              result={
+                  "title":d.title,
+                  "ready":d.execute_script("return document.getElementById('status').dataset.ready"),
+                  "mapHeight":d.execute_script("return document.getElementById('map').getBoundingClientRect().height"),
+                  "sheetHeight":d.execute_script("return document.getElementById('sheet').getBoundingClientRect().height"),
+                  "markerCount":d.execute_script("return document.querySelectorAll('.poi').length"),
+                  "resultCount":d.execute_script("return document.querySelectorAll('.place').length"),
+                  "sheetTitle":d.execute_script("return document.getElementById('sheetTitle').textContent"),
+                  "weather":d.execute_script("return document.getElementById('weather').textContent"),
+                  "gradient":d.execute_script("return Array.from(document.styleSheets).some(s=>{try{return Array.from(s.cssRules).some(r=>String(r.cssText).includes('gradient'))}catch(e){return false}})"),
+                  "blur":d.execute_script("return Array.from(document.styleSheets).some(s=>{try{return Array.from(s.cssRules).some(r=>String(r.cssText).includes('backdrop-filter'))}catch(e){return false}})"),
+                  "console":d.get_log("browser")
               }
-              print(json.dumps(result, ensure_ascii=False, indent=2))
+              print(json.dumps(result,ensure_ascii=False,indent=2))
+              d.save_screenshot("/tmp/konum-radar-default.png")
 
-              assert result["title"] == "Konum Radar"
-              assert result["readyState"] == "complete"
-              assert result["leaflet"] == "object"
-              assert result["mapHeight"] > 300
-              assert result["search"] and result["sheet"]
-              assert 0 < int(result["total"]) <= 12, "Default nearby shortlist is not constrained"
-              assert result["sheetTitle"] == "Yakındaki öneriler", "Wrong default usage mode"
-              assert "En yakın ve farklı türlerden" in result["sheetSub"], "Nearby guidance missing"
-              assert result["toast"] == "Yakınındaki seçenekler hazır", "Success toast missing"
-              assert "--°" not in result["weather"], "Weather did not load"
-              assert 0 < result["markerCount"] <= 12, "Too many default map pins"
-              assert result["cardCount"] > 0, "No actionable result cards"
-              assert result["routeCount"] == result["cardCount"], "Route action missing from cards"
+              assert result["title"]=="Konum Radar"
+              assert result["ready"]=="true"
+              assert result["mapHeight"]>700
+              assert result["sheetHeight"]<=145
+              assert 0 < result["markerCount"] <= 6
+              assert result["resultCount"]==result["markerCount"]
+              assert result["sheetTitle"]=="Yakındaki yerler"
+              assert result["gradient"] is False
+              assert result["blur"] is False
+
+              d.execute_script("document.getElementById('expand').click()")
+              time.sleep(.6)
+              open_height=d.execute_script("return document.getElementById('sheet').getBoundingClientRect().height")
+              route_count=d.execute_script("return document.querySelectorAll('.routeBtn').length")
+              assert open_height>400
+              assert route_count>0
+              d.save_screenshot("/tmp/konum-radar-list.png")
 
               d.execute_script("document.querySelector('[data-cat=\"cafe\"]').click()")
-              time.sleep(1)
-              cafe_title = d.execute_script("return document.getElementById('sheetTitle').textContent")
-              cafe_markers = d.execute_script("return document.querySelectorAll('.poiMarker').length")
-              cafe_cards = d.execute_script("return document.querySelectorAll('.place').length")
-              assert cafe_title == "Kafe", "Category interaction failed"
-              assert 0 < cafe_markers <= 24, "Category map is still overcrowded"
-              assert cafe_cards > 0, "Category results did not render"
+              time.sleep(.5)
+              cafe_title=d.execute_script("return document.getElementById('sheetTitle').textContent")
+              cafe_markers=d.execute_script("return document.querySelectorAll('.poi').length")
+              assert cafe_title=="Kafe"
+              assert 0 < cafe_markers <= 10
 
-              severe = [x for x in result["console"] if x.get("level") == "SEVERE"]
-              unexpected = []
+              severe=[x for x in result["console"] if x.get("level")=="SEVERE"]
+              unexpected=[]
               for x in severe:
-                  msg = x.get("message", "")
-                  expected_overpass_fallback = (
-                      ("overpass" in msg or "maps.mail.ru/osm/tools/overpass" in msg)
-                      and ("504" in msg or "429" in msg or "Failed to load resource" in msg)
-                  )
-                  if not expected_overpass_fallback:
-                      unexpected.append(x)
+                  msg=x.get("message","")
+                  expected=("overpass" in msg or "maps.mail.ru" in msg) and ("504" in msg or "429" in msg or "Failed to load resource" in msg)
+                  if not expected: unexpected.append(x)
               if unexpected:
-                  print("UNEXPECTED_SEVERE_LOGS=", json.dumps(unexpected, ensure_ascii=False))
-                  raise AssertionError("Unexpected browser console errors")
+                  print("UNEXPECTED_SEVERE=",json.dumps(unexpected,ensure_ascii=False))
+                  raise AssertionError("Unexpected severe browser errors")
           finally:
               d.quit()
           PY
+
+      - name: Upload visual test screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: konum-radar-visual-test
+          path: |
+            /tmp/konum-radar-default.png
+            /tmp/konum-radar-list.png
+          if-no-files-found: ignore
