@@ -3,280 +3,390 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
-<meta name="theme-color" content="#07111f">
-<meta name="description" content="Konum Radar ile çevrendeki yerleri keşfet, filtrele ve bölgeyi analiz et.">
+<meta name="theme-color" content="#ffffff">
+<meta name="description" content="Konum Radar ile yakınındaki kafe, restoran, market, eczane, park ve diğer yerleri sade bir haritada keşfet.">
 <title>Konum Radar</title>
 <link rel="manifest" href="./manifest.webmanifest">
 <link rel="icon" href="./icon.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://unpkg.com">
+<link rel="preconnect" href="https://tile.openstreetmap.org">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <style>
-:root{--ink:#07111f;--ink2:#102236;--glass:rgba(255,255,255,.91);--line:rgba(15,23,42,.10);--muted:#64748b;--teal:#14b8a6;--teal2:#0f766e;--shadow:0 16px 45px rgba(2,8,23,.18)}
+:root{
+  --bg:#f6f7f8;--card:#fff;--text:#111827;--muted:#6b7280;--line:#e5e7eb;
+  --accent:#0f766e;--accent-soft:#e7f4f2;--shadow:0 8px 28px rgba(17,24,39,.10);
+}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-html,body{margin:0;width:100%;height:100%;overflow:hidden;font-family:Inter,ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:#dce8ec;color:var(--ink)}
+html,body{width:100%;height:100%;margin:0;overflow:hidden;background:var(--bg);color:var(--text);font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
 button,input{font:inherit}
-#map{position:fixed;inset:0;z-index:1;background:#dce8ec}
-.leaflet-control-attribution{font-size:8px!important;opacity:.7}
-.leaflet-control-zoom{display:none}
-.topbar{position:fixed;z-index:600;left:12px;right:12px;top:calc(10px + env(safe-area-inset-top));display:grid;grid-template-columns:1fr auto;gap:9px;align-items:center}
-.searchbox{height:52px;border-radius:18px;background:var(--glass);backdrop-filter:blur(18px);box-shadow:var(--shadow);border:1px solid rgba(255,255,255,.75);display:flex;align-items:center;gap:10px;padding:0 14px}
-.logo{width:31px;height:31px;border-radius:11px;background:var(--ink);display:grid;place-items:center;color:#fff;font-size:15px;flex:0 0 auto}
-.searchbox input{border:0;outline:0;background:transparent;width:100%;font-size:14px;color:var(--ink);min-width:0}.searchbox input::placeholder{color:#7b8999}
-.weather{height:52px;min-width:74px;border:1px solid rgba(255,255,255,.75);background:var(--glass);backdrop-filter:blur(18px);box-shadow:var(--shadow);border-radius:18px;padding:7px 10px;text-align:center}
-.weather b{display:block;font-size:16px;line-height:18px}.weather span{font-size:9px;color:var(--muted);white-space:nowrap}
-.chips{position:fixed;z-index:590;top:calc(72px + env(safe-area-inset-top));left:0;right:0;padding:0 12px;display:flex;gap:8px;overflow-x:auto;scrollbar-width:none}.chips::-webkit-scrollbar{display:none}
-.chip{flex:0 0 auto;border:1px solid rgba(255,255,255,.82);background:rgba(255,255,255,.88);backdrop-filter:blur(16px);box-shadow:0 8px 22px rgba(2,8,23,.10);border-radius:999px;padding:9px 12px;font-size:12px;font-weight:800;color:#263548}
-.chip.active{background:var(--ink);color:#fff;border-color:var(--ink)}
-.fab{position:fixed;z-index:610;right:14px;bottom:calc(205px + env(safe-area-inset-bottom));width:52px;height:52px;border:0;border-radius:18px;background:var(--ink);color:#fff;box-shadow:0 14px 30px rgba(2,8,23,.28);font-size:22px;display:grid;place-items:center}
-.fab.loading{animation:pulseBtn 1s infinite}@keyframes pulseBtn{50%{opacity:.62;transform:scale(.96)}}
-.toast{position:fixed;z-index:700;left:50%;top:calc(126px + env(safe-area-inset-top));transform:translateX(-50%) translateY(-8px);max-width:calc(100% - 28px);background:rgba(7,17,31,.92);color:#fff;border-radius:999px;padding:8px 12px;font-size:11px;font-weight:700;opacity:0;pointer-events:none;transition:.25s;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
-.sheet{position:fixed;z-index:620;left:8px;right:8px;bottom:calc(8px + env(safe-area-inset-bottom));height:300px;background:rgba(250,252,253,.96);backdrop-filter:blur(22px);border:1px solid rgba(255,255,255,.85);border-radius:26px;box-shadow:0 -12px 48px rgba(2,8,23,.18);transition:height .3s cubic-bezier(.2,.8,.2,1);overflow:hidden}
-.sheet.open{height:min(72dvh,690px)}
-.handleWrap{height:26px;display:grid;place-items:center;cursor:pointer}.handle{width:42px;height:5px;border-radius:99px;background:#c5ced7}
-.sheetTop{display:flex;align-items:center;justify-content:space-between;padding:0 15px 8px}.sheetTitle b{font-size:17px;letter-spacing:-.2px}.sheetTitle span{display:block;font-size:11px;color:var(--muted);margin-top:2px}
-.expand{border:0;background:#edf2f5;border-radius:12px;width:38px;height:38px;font-size:17px}
-.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;padding:0 12px 10px}.stat{background:#fff;border:1px solid var(--line);border-radius:15px;padding:8px 10px;text-align:center}.stat b{display:block;font-size:16px}.stat span{font-size:9px;color:var(--muted)}
-.tools{display:flex;gap:7px;padding:0 12px 10px}.radius{display:flex;gap:4px;background:#e9eef2;padding:4px;border-radius:14px;flex:1}.radius button{flex:1;border:0;background:transparent;border-radius:10px;padding:7px 5px;font-size:10px;font-weight:800;color:#637386}.radius button.active{background:#fff;color:var(--ink);box-shadow:0 2px 8px rgba(2,8,23,.08)}
-.favToggle{border:1px solid var(--line);background:#fff;border-radius:14px;padding:0 12px;font-size:12px;font-weight:800}
-.results{height:calc(100% - 166px);overflow-y:auto;padding:0 12px 18px}.results::-webkit-scrollbar{display:none}
-.place{background:#fff;border:1px solid var(--line);border-radius:18px;padding:12px;margin-bottom:8px;display:grid;grid-template-columns:44px 1fr;gap:10px;align-items:center}
-.placeIcon{width:44px;height:44px;border-radius:15px;background:#f0f5f6;display:grid;place-items:center;font-size:20px}
-.place h3{font-size:13px;margin:0 0 4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.meta{font-size:10px;color:var(--muted)}
-.placeActions{grid-column:1/-1;display:grid;grid-template-columns:1fr 1fr 42px;gap:7px;margin-top:2px}
-.actionBtn{border:0;border-radius:12px;padding:9px 10px;font-size:11px;font-weight:850;background:#eef3f5;color:#243446}
-.routeBtn{background:var(--ink);color:#fff}
-.star{border:0;background:#f4f7f8;width:42px;height:36px;border-radius:12px;font-size:17px}
-.empty{padding:26px 12px;text-align:center;color:var(--muted);font-size:12px}
-.radarPin{width:28px;height:28px;border-radius:50%;background:#fff;border:6px solid var(--ink);box-shadow:0 0 0 8px rgba(20,184,166,.18),0 0 0 17px rgba(20,184,166,.08);animation:radar 1.8s infinite}@keyframes radar{50%{box-shadow:0 0 0 13px rgba(20,184,166,.15),0 0 0 26px rgba(20,184,166,.04)}}
-.poiMarker{width:34px;height:34px;border-radius:12px;background:#fff;border:1px solid rgba(15,23,42,.10);box-shadow:0 5px 18px rgba(2,8,23,.18);display:grid;place-items:center;font-size:17px}
-.leaflet-div-icon{background:transparent!important;border:0!important}
-.brandTag{position:fixed;z-index:580;left:14px;bottom:calc(205px + env(safe-area-inset-bottom));background:rgba(255,255,255,.86);backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,.8);border-radius:12px;padding:7px 9px;font-size:10px;font-weight:800;color:#3b4b5d}
-@media(min-width:700px){.topbar,.chips{max-width:720px;margin:auto}.sheet{max-width:720px;left:50%;right:auto;transform:translateX(-50%);width:calc(100% - 20px)}}
+button{touch-action:manipulation}
+#map{position:fixed;inset:0;background:#e8ecef;z-index:1}
+.leaflet-control-attribution{font-size:8px!important;background:rgba(255,255,255,.82)!important}
+.leaflet-popup-content-wrapper{border-radius:14px;box-shadow:0 8px 22px rgba(17,24,39,.14)}
+.leaflet-popup-content{margin:11px 13px;font-family:inherit;font-size:12px;line-height:1.35}
+.top{position:fixed;z-index:500;left:12px;right:12px;top:calc(10px + env(safe-area-inset-top));display:grid;grid-template-columns:1fr auto;gap:8px}
+.searchBox{height:50px;background:#fff;border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);display:flex;align-items:center;padding:0 13px;gap:10px}
+.searchIcon{font-size:16px;color:#4b5563;line-height:1}
+.searchBox input{width:100%;min-width:0;border:0;outline:0;background:transparent;color:var(--text);font-size:14px}
+.searchBox input::placeholder{color:#9ca3af}
+.weather{height:50px;min-width:70px;background:#fff;border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:5px 9px}
+.weather b{font-size:15px;line-height:17px}.weather span{font-size:9px;color:var(--muted);white-space:nowrap}
+.chips{position:fixed;z-index:490;top:calc(70px + env(safe-area-inset-top));left:0;right:0;padding:0 12px;display:flex;gap:7px;overflow-x:auto;scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.chip{flex:0 0 auto;border:1px solid var(--line);background:#fff;color:#374151;border-radius:999px;padding:9px 12px;font-size:12px;font-weight:700;box-shadow:0 3px 12px rgba(17,24,39,.07)}
+.chip.active{background:var(--text);border-color:var(--text);color:#fff}
+.locate{position:fixed;z-index:505;right:14px;bottom:calc(204px + env(safe-area-inset-bottom));width:48px;height:48px;border:1px solid var(--line);border-radius:15px;background:#fff;color:var(--text);box-shadow:var(--shadow);font-size:20px;display:grid;place-items:center}
+.locate.loading{opacity:.62}
+.notice{position:fixed;z-index:700;left:50%;top:calc(120px + env(safe-area-inset-top));transform:translateX(-50%) translateY(-6px);max-width:calc(100% - 32px);background:#111827;color:#fff;border-radius:999px;padding:8px 12px;font-size:11px;font-weight:700;opacity:0;pointer-events:none;transition:.2s;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.notice.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.sheet{position:fixed;z-index:600;left:0;right:0;bottom:0;height:188px;background:#fff;border-top:1px solid var(--line);border-radius:22px 22px 0 0;box-shadow:0 -8px 30px rgba(17,24,39,.10);transition:height .26s ease;padding-bottom:env(safe-area-inset-bottom);overflow:hidden}
+.sheet.open{height:min(64dvh,620px)}
+.handleArea{height:24px;display:grid;place-items:center;cursor:pointer}
+.handle{width:38px;height:4px;border-radius:99px;background:#d1d5db}
+.sheetHead{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:0 14px 8px}
+.sheetTitle b{display:block;font-size:17px;letter-spacing:-.2px}
+.sheetTitle span{display:block;margin-top:3px;font-size:10px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:270px}
+.expand{width:36px;height:36px;border:0;border-radius:11px;background:#f3f4f6;color:#374151;font-weight:800}
+.summary{display:flex;gap:12px;padding:0 14px 10px;color:var(--muted);font-size:10px}
+.summary strong{color:var(--text);font-size:12px}
+.results{height:calc(100% - 90px);overflow-y:auto;padding:0 12px 18px;scrollbar-width:none}
+.results::-webkit-scrollbar{display:none}
+.place{border:1px solid var(--line);border-radius:16px;background:#fff;padding:11px 12px;margin-bottom:8px}
+.placeTop{display:grid;grid-template-columns:36px 1fr auto;gap:10px;align-items:center}
+.placeIcon{width:36px;height:36px;border-radius:12px;background:var(--accent-soft);display:grid;place-items:center;color:var(--accent);font-size:12px;font-weight:900}
+.place h3{margin:0 0 3px;font-size:13px;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.meta{font-size:10px;color:var(--muted)}
+.star{width:34px;height:34px;border:0;border-radius:11px;background:#f3f4f6;font-size:16px;color:#374151}
+.actions{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:10px}
+.action{border:1px solid var(--line);border-radius:11px;background:#fff;color:#374151;padding:8px 9px;font-size:10px;font-weight:800}
+.action.primary{background:var(--text);border-color:var(--text);color:#fff}
+.empty{padding:24px 12px;text-align:center;color:var(--muted);font-size:12px}
+.userDot{width:18px;height:18px;border-radius:50%;background:#2563eb;border:3px solid #fff;box-shadow:0 0 0 2px rgba(37,99,235,.28)}
+.poiDot{width:14px;height:14px;border-radius:50%;background:var(--accent);border:3px solid #fff;box-shadow:0 1px 7px rgba(17,24,39,.28)}
+.poiDot.selected{width:18px;height:18px;background:var(--text)}
+.leaflet-div-icon{border:0!important;background:transparent!important}
+@media(min-width:720px){
+  .top,.chips{max-width:720px;margin:auto}
+  .sheet{left:50%;right:auto;transform:translateX(-50%);width:min(720px,100%);border-left:1px solid var(--line);border-right:1px solid var(--line)}
+}
 </style>
 </head>
 <body>
 <div id="map"></div>
-<div class="topbar">
-  <div class="searchbox"><div class="logo">⌖</div><input id="search" autocomplete="off" placeholder="Kafe, park, eczane ara…"></div>
+
+<div class="top">
+  <label class="searchBox">
+    <span class="searchIcon">⌕</span>
+    <input id="search" type="search" autocomplete="off" placeholder="Yakınında ne arıyorsun?">
+  </label>
   <div class="weather" id="weather"><b>--°</b><span>hava</span></div>
 </div>
-<div class="chips" id="chips">
-  <button class="chip active" data-cat="nearby">📍 Yakınımda</button>
-  <button class="chip" data-cat="cafe">☕ Kafe</button>
-  <button class="chip" data-cat="restaurant">🍽️ Yemek</button>
-  <button class="chip" data-cat="supermarket">🛒 Market</button>
-  <button class="chip" data-cat="pharmacy">💊 Eczane</button>
-  <button class="chip" data-cat="hospital">🏥 Sağlık</button>
-  <button class="chip" data-cat="atm">🏧 ATM</button>
-  <button class="chip" data-cat="park">🌳 Park</button>
-  <button class="chip" data-cat="hotel">🏨 Otel</button>
+
+<div class="chips">
+  <button class="chip active" data-cat="nearby">Yakınımda</button>
+  <button class="chip" data-cat="cafe">Kafe</button>
+  <button class="chip" data-cat="restaurant">Yemek</button>
+  <button class="chip" data-cat="supermarket">Market</button>
+  <button class="chip" data-cat="pharmacy">Eczane</button>
+  <button class="chip" data-cat="hospital">Sağlık</button>
+  <button class="chip" data-cat="park">Park</button>
+  <button class="chip" data-cat="hotel">Otel</button>
 </div>
-<div class="toast" id="toast">Hazır</div>
-<button class="fab" id="locBtn" aria-label="Konumumu bul">◎</button>
-<div class="brandTag">KONUM RADAR</div>
+
+<button class="locate" id="locBtn" aria-label="Konumuma dön">◎</button>
+<div class="notice" id="notice">Hazır</div>
 
 <section class="sheet" id="sheet">
-  <div class="handleWrap" id="handle"><div class="handle"></div></div>
-  <div class="sheetTop">
-    <div class="sheetTitle"><b id="sheetTitle">Çevreni keşfet</b><span id="sheetSub">Konumunu kullanarak yakınındaki yerleri tara</span></div>
-    <button class="expand" id="expand">⌃</button>
-  </div>
-  <div class="stats">
-    <div class="stat"><b id="total">0</b><span>YER</span></div>
-    <div class="stat"><b id="nearest">--</b><span>EN YAKIN</span></div>
-    <div class="stat"><b id="cats">1 km</b><span>ALAN</span></div>
-  </div>
-  <div class="tools">
-    <div class="radius">
-      <button data-r="500">500 m</button>
-      <button class="active" data-r="1000">1 km</button>
-      <button data-r="2000">2 km</button>
+  <div class="handleArea" id="handle"><div class="handle"></div></div>
+  <div class="sheetHead">
+    <div class="sheetTitle">
+      <b id="sheetTitle">Yakındaki öneriler</b>
+      <span id="sheetSub">Konumunu kullanarak yakınındaki yerleri gösteriyoruz</span>
     </div>
-    <button class="favToggle" id="favToggle">☆ Favoriler</button>
+    <button class="expand" id="expand" aria-label="Paneli aç">⌃</button>
   </div>
-  <div class="results" id="results"><div class="empty">Konumunu açtığında sonuçlar burada görünür.</div></div>
+  <div class="summary">
+    <span><strong id="total">0</strong> öneri</span>
+    <span>en yakın <strong id="nearest">--</strong></span>
+    <span>alan <strong id="range">1 km</strong></span>
+  </div>
+  <div class="results" id="results"><div class="empty">Konum alındığında yakınındaki yerler burada görünecek.</div></div>
 </section>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
 (function(){
 'use strict';
-if(typeof L==='undefined'){document.getElementById('toast').textContent='Harita kütüphanesi yüklenemedi';document.getElementById('toast').classList.add('show');return;}
-var state={lat:null,lon:null,radius:1000,cat:'nearby',query:'',items:[],markers:[],showFav:false,favorites:JSON.parse(localStorage.getItem('kr_favs')||'[]')};
-var labels={cafe:'Kafe',restaurant:'Yemek',supermarket:'Market',pharmacy:'Eczane',hospital:'Sağlık',atm:'ATM',park:'Park',hotel:'Otel',other:'Diğer'};
-var icons={cafe:'☕',restaurant:'🍽️',supermarket:'🛒',pharmacy:'💊',hospital:'🏥',atm:'🏧',park:'🌳',hotel:'🏨',other:'📍'};
-var map=L.map('map',{zoomControl:false,attributionControl:true}).setView([36.89,30.70],13);
+
+if(typeof L==='undefined'){
+  document.getElementById('notice').textContent='Harita yüklenemedi';
+  document.getElementById('notice').classList.add('show');
+  return;
+}
+
+var labels={cafe:'Kafe',restaurant:'Yemek',supermarket:'Market',pharmacy:'Eczane',hospital:'Sağlık',atm:'ATM',park:'Park',hotel:'Otel',other:'Yer'};
+var initials={cafe:'K',restaurant:'Y',supermarket:'M',pharmacy:'E',hospital:'S',atm:'A',park:'P',hotel:'O',other:'•'};
+var state={
+  lat:null,lon:null,radius:1000,cat:'nearby',query:'',items:[],searchItems:[],markers:[],
+  favorites:JSON.parse(localStorage.getItem('kr_favs')||'[]'),selectedId:null
+};
+var map=L.map('map',{zoomControl:false,attributionControl:true,preferCanvas:true}).setView([36.89,30.70],13);
 L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap'}).addTo(map);
-var meMarker=null,radiusCircle=null,toastTimer=null;
-function q(s){return document.querySelector(s)}
-function qa(s){return Array.from(document.querySelectorAll(s))}
-function escapeHtml(s){return String(s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]})}
-function toast(msg,bad){var el=q('#toast');el.textContent=msg;el.style.background=bad?'rgba(127,29,29,.94)':'rgba(7,17,31,.92)';el.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(function(){el.classList.remove('show')},2600)}
-function distance(a,b,c,d){var R=6371000,p=Math.PI/180,x=(c-a)*p,y=(d-b)*p,A=Math.sin(x/2)*Math.sin(x/2)+Math.cos(a*p)*Math.cos(c*p)*Math.sin(y/2)*Math.sin(y/2);return 2*R*Math.asin(Math.sqrt(A))}
-function fmt(m){return m<1000?Math.round(m)+' m':(m/1000).toFixed(1)+' km'}
-function category(t){if(t.amenity==='cafe')return'cafe';if(t.amenity==='restaurant'||t.amenity==='fast_food')return'restaurant';if(t.shop==='supermarket'||t.shop==='convenience')return'supermarket';if(t.amenity==='pharmacy')return'pharmacy';if(t.amenity==='hospital'||t.amenity==='clinic')return'hospital';if(t.amenity==='atm')return'atm';if(t.leisure==='park')return'park';if(t.tourism==='hotel'||t.tourism==='hostel')return'hotel';return'other'}
+
+var userMarker=null,radiusCircle=null,noticeTimer=null,searchTimer=null,searchAbort=null;
 var overpassEndpoints=[
-  'https://maps.mail.ru/osm/tools/overpass/api/interpreter',
   'https://overpass-api.de/api/interpreter',
+  'https://maps.mail.ru/osm/tools/overpass/api/interpreter',
   'https://overpass.maprva.org/api/interpreter'
 ];
-function makeQuery(lat,lon,r){return '[out:json][timeout:14];('+
-'nwr(around:'+r+','+lat+','+lon+')[\"amenity\"~\"^(cafe|restaurant|fast_food|pharmacy|hospital|clinic|atm)$\"];'+
-'nwr(around:'+r+','+lat+','+lon+')[\"shop\"~\"^(supermarket|convenience)$\"];'+
-'nwr(around:'+r+','+lat+','+lon+')[\"leisure\"=\"park\"];'+
-'nwr(around:'+r+','+lat+','+lon+')[\"tourism\"~\"^(hotel|hostel)$\"];);out center tags;'}
 
+function q(s){return document.querySelector(s)}
+function qa(s){return Array.from(document.querySelectorAll(s))}
+function esc(s){return String(s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]})}
+function notice(msg,bad){
+  var el=q('#notice');el.textContent=msg;el.style.background=bad?'#991b1b':'#111827';
+  el.classList.add('show');clearTimeout(noticeTimer);noticeTimer=setTimeout(function(){el.classList.remove('show')},2300);
+}
+function distance(a,b,c,d){
+  var R=6371000,p=Math.PI/180,x=(c-a)*p,y=(d-b)*p;
+  var A=Math.sin(x/2)*Math.sin(x/2)+Math.cos(a*p)*Math.cos(c*p)*Math.sin(y/2)*Math.sin(y/2);
+  return 2*R*Math.asin(Math.sqrt(A));
+}
+function fmt(m){return m<1000?Math.round(m)+' m':(m/1000).toFixed(1)+' km'}
+function category(t){
+  if(t.amenity==='cafe')return'cafe';
+  if(t.amenity==='restaurant'||t.amenity==='fast_food')return'restaurant';
+  if(t.shop==='supermarket'||t.shop==='convenience')return'supermarket';
+  if(t.amenity==='pharmacy')return'pharmacy';
+  if(t.amenity==='hospital'||t.amenity==='clinic')return'hospital';
+  if(t.amenity==='atm')return'atm';
+  if(t.leisure==='park')return'park';
+  if(t.tourism==='hotel'||t.tourism==='hostel')return'hotel';
+  return'other';
+}
+function makeQuery(lat,lon,r){
+  return '[out:json][timeout:14];('+
+    'nwr(around:'+r+','+lat+','+lon+')[\"amenity\"~\"^(cafe|restaurant|fast_food|pharmacy|hospital|clinic|atm)$\"];'+
+    'nwr(around:'+r+','+lat+','+lon+')[\"shop\"~\"^(supermarket|convenience)$\"];'+
+    'nwr(around:'+r+','+lat+','+lon+')[\"leisure\"=\"park\"];'+
+    'nwr(around:'+r+','+lat+','+lon+')[\"tourism\"~\"^(hotel|hostel)$\"];'+
+  ');out center tags;';
+}
 async function fetchOverpass(query){
   var lastError=null;
   for(var i=0;i<overpassEndpoints.length;i++){
-    var endpoint=overpassEndpoints[i];
-    var controller=new AbortController();
-    var timer=setTimeout(function(){controller.abort()},10000);
+    var endpoint=overpassEndpoints[i],controller=new AbortController();
+    var timer=setTimeout(function(){controller.abort()},9500);
     try{
-      var body=new URLSearchParams({data:query});
-      var res=await fetch(endpoint,{method:'POST',body:body,signal:controller.signal});
+      var res=await fetch(endpoint,{method:'POST',body:new URLSearchParams({data:query}),signal:controller.signal});
       clearTimeout(timer);
-      if(!res.ok)throw new Error(endpoint+' HTTP '+res.status);
-      var data=await res.json();
-      return {data:data,endpoint:endpoint};
+      if(!res.ok)throw new Error('HTTP '+res.status);
+      return await res.json();
     }catch(err){
-      clearTimeout(timer);
-      lastError=err;
-      console.warn('Overpass fallback:',endpoint,err&&err.message?err.message:err);
+      clearTimeout(timer);lastError=err;console.warn('Overpass fallback',endpoint,err&&err.message?err.message:err);
     }
   }
-  throw lastError||new Error('Overpass sunucularına ulaşılamadı');
+  throw lastError||new Error('Veri servisine ulaşılamadı');
 }
-function ll(el){return el.type==='node'?[el.lat,el.lon]:[el.center&&el.center.lat,el.center&&el.center.lon]}
+function latlon(el){return el.type==='node'?[el.lat,el.lon]:[el.center&&el.center.lat,el.center&&el.center.lon]}
+
+function nearbyShortlist(){
+  var picked=[],perCat={};
+  state.items.forEach(function(x){
+    if(picked.length>=10)return;
+    perCat[x.cat]=perCat[x.cat]||0;
+    if(perCat[x.cat]<2){picked.push(x);perCat[x.cat]++;}
+  });
+  if(picked.length<10){
+    state.items.forEach(function(x){
+      if(picked.length>=10)return;
+      if(!picked.some(function(p){return p.id===x.id}))picked.push(x);
+    });
+  }
+  return picked;
+}
 function currentItems(){
- var arr=state.showFav?state.favorites.slice():state.items.slice();
-
- if(state.query){
-   var s=state.query.toLocaleLowerCase('tr-TR');
-   arr=arr.filter(function(x){
-     return x.name.toLocaleLowerCase('tr-TR').indexOf(s)>=0 ||
-            labels[x.cat].toLocaleLowerCase('tr-TR').indexOf(s)>=0;
-   });
-   if(state.cat!=='nearby' && state.cat!=='all')arr=arr.filter(function(x){return x.cat===state.cat});
-   return arr;
- }
-
- if(state.cat==='nearby' && !state.showFav){
-   var picked=[],counts={};
-   arr.forEach(function(x){
-     if(picked.length>=12)return;
-     counts[x.cat]=counts[x.cat]||0;
-     if(counts[x.cat]<2){picked.push(x);counts[x.cat]++;}
-   });
-   if(picked.length<12){
-     arr.forEach(function(x){
-       if(picked.length>=12)return;
-       if(!picked.some(function(p){return p.id===x.id}))picked.push(x);
-     });
-   }
-   return picked;
- }
-
- if(state.cat!=='all' && !state.showFav)arr=arr.filter(function(x){return x.cat===state.cat});
- return arr;
+  if(state.query){
+    if(state.searchItems.length)return state.searchItems.slice(0,12);
+    var needle=state.query.toLocaleLowerCase('tr-TR');
+    return state.items.filter(function(x){
+      return x.name.toLocaleLowerCase('tr-TR').indexOf(needle)>=0 ||
+        labels[x.cat].toLocaleLowerCase('tr-TR').indexOf(needle)>=0;
+    }).slice(0,12);
+  }
+  if(state.cat==='nearby')return nearbyShortlist();
+  return state.items.filter(function(x){return x.cat===state.cat}).slice(0,18);
 }
-function markerIcon(x){return L.divIcon({className:'',html:'<div class="poiMarker">'+icons[x.cat]+'</div>',iconSize:[34,34],iconAnchor:[17,17]})}
+function markerIcon(selected){
+  return L.divIcon({className:'',html:'<div class="poiDot'+(selected?' selected':'')+'"></div>',iconSize:[18,18],iconAnchor:[9,9]});
+}
+function userIcon(){
+  return L.divIcon({className:'',html:'<div class="userDot"></div>',iconSize:[18,18],iconAnchor:[9,9]});
+}
+function favorite(id){return state.favorites.some(function(x){return x.id===id})}
 function card(x){
- var isFav=state.favorites.some(function(f){return f.id===x.id});
- var id=encodeURIComponent(x.id);
- return '<div class="place" data-place="'+id+'">'+
-   '<div class="placeIcon">'+icons[x.cat]+'</div>'+
-   '<div><h3>'+escapeHtml(x.name)+'</h3><div class="meta">'+labels[x.cat]+' · '+fmt(x.dist)+'</div></div>'+
-   '<div class="placeActions">'+
-     '<button class="actionBtn map-btn" data-id="'+id+'">⌖ Haritada</button>'+
-     '<button class="actionBtn routeBtn route-btn" data-id="'+id+'">Yol tarifi ↗</button>'+
-     '<button class="star fav-btn" data-id="'+id+'">'+(isFav?'★':'☆')+'</button>'+
-   '</div>'+
- '</div>';
+  var id=encodeURIComponent(x.id);
+  return '<article class="place" data-place="'+id+'">'+
+    '<div class="placeTop">'+
+      '<div class="placeIcon">'+initials[x.cat]+'</div>'+
+      '<div><h3>'+esc(x.name)+'</h3><div class="meta">'+labels[x.cat]+' · '+fmt(x.dist)+'</div></div>'+
+      '<button class="star fav-btn" data-id="'+id+'" aria-label="Favori">'+(favorite(x.id)?'★':'☆')+'</button>'+
+    '</div>'+
+    '<div class="actions">'+
+      '<button class="action map-btn" data-id="'+id+'">Haritada göster</button>'+
+      '<button class="action primary route-btn" data-id="'+id+'">Yol tarifi</button>'+
+    '</div>'+
+  '</article>';
 }
+function clearMarkers(){state.markers.forEach(function(m){map.removeLayer(m)});state.markers=[]}
 function render(){
- var arr=currentItems();
- state.markers.forEach(function(m){map.removeLayer(m)});state.markers=[];
- arr.slice(0,state.cat==='nearby'?12:24).forEach(function(x){
-   var m=L.marker([x.lat,x.lon],{icon:markerIcon(x)}).addTo(map).bindPopup('<b>'+escapeHtml(x.name)+'</b><br>'+labels[x.cat]+' · '+fmt(x.dist));
-   state.markers.push(m);
- });
- q('#total').textContent=arr.length;q('#nearest').textContent=arr[0]?fmt(arr[0].dist):'--';q('#cats').textContent=fmt(state.radius);
- q('#sheetTitle').textContent=state.showFav?'Favorilerin':(state.cat==='nearby'?'Yakındaki öneriler':labels[state.cat]);
- q('#sheetSub').textContent=state.lat===null?'Konumunu kullanarak yakınındaki yerleri tara':(state.cat==='nearby'?'En yakın ve farklı türlerden seçilmiş yerler':arr.length+' sonuç · '+fmt(state.radius)+' çevre');
- q('#results').innerHTML=arr.length?arr.slice(0,state.cat==='nearby'?12:40).map(card).join(''):'<div class="empty">'+(state.showFav?'Henüz favori eklemedin.':'Bu filtrede sonuç bulunamadı.')+'</div>';
- q('#favToggle').textContent=state.showFav?'← Sonuçlar':'☆ Favoriler';
+  var arr=currentItems();
+  clearMarkers();
+  arr.slice(0,state.cat==='nearby'&&!state.query?10:18).forEach(function(x){
+    var m=L.marker([x.lat,x.lon],{icon:markerIcon(state.selectedId===x.id)})
+      .addTo(map)
+      .bindPopup('<b>'+esc(x.name)+'</b><br>'+labels[x.cat]+' · '+fmt(x.dist));
+    m.on('click',function(){state.selectedId=x.id;renderSelectionOnly()});
+    state.markers.push(m);
+  });
+
+  q('#total').textContent=arr.length;
+  q('#nearest').textContent=arr[0]?fmt(arr[0].dist):'--';
+  q('#range').textContent=fmt(state.radius);
+  q('#sheetTitle').textContent=state.query?'Arama sonuçları':(state.cat==='nearby'?'Yakındaki öneriler':labels[state.cat]);
+  q('#sheetSub').textContent=state.lat===null
+    ?'Konumunu kullanarak yakınındaki yerleri gösteriyoruz'
+    :(state.cat==='nearby'&&!state.query?'En yakın ve farklı türlerden seçilmiş yerler':arr.length+' sonuç · '+fmt(state.radius)+' çevre');
+  q('#results').innerHTML=arr.length?arr.map(card).join(''):'<div class="empty">Bu aramada yakınında uygun bir yer bulamadık.</div>';
 }
-async function loadPlaces(){
- if(state.lat===null)return;
- q('#locBtn').classList.add('loading');toast('Çevre taranıyor…',false);
- try{
-   var overpassResult=await fetchOverpass(makeQuery(state.lat,state.lon,state.radius));
-   var data=overpassResult.data,seen={},items=[];
-   (data.elements||[]).forEach(function(el){
-     var p=ll(el);if(!p||p[0]==null||p[1]==null)return;
-     var c=category(el.tags||{}),name=(el.tags&&(el.tags.name||el.tags.brand))||labels[c],id=c+'|'+name+'|'+p[0].toFixed(5)+'|'+p[1].toFixed(5);
-     if(seen[id])return;seen[id]=1;
-     items.push({id:id,name:name,cat:c,lat:p[0],lon:p[1],dist:distance(state.lat,state.lon,p[0],p[1])});
-   });
-   state.items=items.sort(function(a,b){return a.dist-b.dist});state.showFav=false;render();toast('Yakınındaki seçenekler hazır',false);
- }catch(e){console.error(e);toast('Tarama servisi yanıt vermedi',true)}
- q('#locBtn').classList.remove('loading');
+function renderSelectionOnly(){
+  var arr=currentItems();
+  clearMarkers();
+  arr.slice(0,state.cat==='nearby'&&!state.query?10:18).forEach(function(x){
+    var m=L.marker([x.lat,x.lon],{icon:markerIcon(state.selectedId===x.id)})
+      .addTo(map)
+      .bindPopup('<b>'+esc(x.name)+'</b><br>'+labels[x.cat]+' · '+fmt(x.dist));
+    m.on('click',function(){state.selectedId=x.id;renderSelectionOnly()});
+    state.markers.push(m);
+    if(state.selectedId===x.id)m.openPopup();
+  });
+}
+function drawUser(){
+  if(userMarker)map.removeLayer(userMarker);
+  if(radiusCircle)map.removeLayer(radiusCircle);
+  userMarker=L.marker([state.lat,state.lon],{icon:userIcon(),zIndexOffset:1000}).addTo(map).bindPopup('Konumun');
+  radiusCircle=L.circle([state.lat,state.lon],{radius:state.radius,color:'#0f766e',weight:1,opacity:.35,fill:false,dashArray:'4 6'}).addTo(map);
+  map.fitBounds(radiusCircle.getBounds(),{paddingTopLeft:[36,120],paddingBottomRight:[36,200]});
 }
 async function loadWeather(){
- try{
-   var url='https://api.open-meteo.com/v1/forecast?latitude='+state.lat+'&longitude='+state.lon+'&current=temperature_2m,weather_code&timezone=auto';
-   var data=await (await fetch(url)).json(),c=data.current;if(!c)return;
-   var txt=c.weather_code===0?'Açık':c.weather_code<=3?'Bulutlu':c.weather_code<=67?'Yağışlı':c.weather_code<=77?'Karlı':'Değişken';
-   q('#weather').innerHTML='<b>'+Math.round(c.temperature_2m)+'°</b><span>'+txt+'</span>';
- }catch(e){}
+  try{
+    var u='https://api.open-meteo.com/v1/forecast?latitude='+state.lat+'&longitude='+state.lon+'&current=temperature_2m,weather_code&timezone=auto';
+    var d=await (await fetch(u)).json(),c=d.current;if(!c)return;
+    var t=c.weather_code===0?'Açık':c.weather_code<=3?'Bulutlu':c.weather_code<=67?'Yağışlı':c.weather_code<=77?'Karlı':'Değişken';
+    q('#weather').innerHTML='<b>'+Math.round(c.temperature_2m)+'°</b><span>'+t+'</span>';
+  }catch(e){}
 }
-function drawMe(){
- if(meMarker)map.removeLayer(meMarker);if(radiusCircle)map.removeLayer(radiusCircle);
- meMarker=L.marker([state.lat,state.lon],{icon:L.divIcon({className:'',html:'<div class="radarPin"></div>',iconSize:[28,28],iconAnchor:[14,14]})}).addTo(map).bindPopup('Buradasın');
- radiusCircle=L.circle([state.lat,state.lon],{radius:state.radius,color:'#0f766e',weight:1,fillColor:'#14b8a6',fillOpacity:.045}).addTo(map);
- map.fitBounds(radiusCircle.getBounds(),{paddingTopLeft:[40,125],paddingBottomRight:[40,210]});
+async function loadPlaces(){
+  if(state.lat===null)return;
+  q('#locBtn').classList.add('loading');notice('Yakınındaki yerler aranıyor',false);
+  try{
+    var data=await fetchOverpass(makeQuery(state.lat,state.lon,state.radius)),seen={},items=[];
+    (data.elements||[]).forEach(function(el){
+      var p=latlon(el);if(!p||p[0]==null||p[1]==null)return;
+      var c=category(el.tags||{}),name=(el.tags&&(el.tags.name||el.tags.brand))||labels[c];
+      var id=c+'|'+name+'|'+p[0].toFixed(5)+'|'+p[1].toFixed(5);
+      if(seen[id])return;seen[id]=1;
+      items.push({id:id,name:name,cat:c,lat:p[0],lon:p[1],dist:distance(state.lat,state.lon,p[0],p[1])});
+    });
+    state.items=items.sort(function(a,b){return a.dist-b.dist});
+    state.searchItems=[];state.selectedId=null;render();notice('Yakınındaki seçenekler hazır',false);
+  }catch(e){console.error(e);notice('Yakındaki yerler alınamadı',true)}
+  q('#locBtn').classList.remove('loading');
 }
 function locate(){
- if(!navigator.geolocation){toast('Tarayıcı konumu desteklemiyor',true);return}
- q('#locBtn').classList.add('loading');toast('Konum alınıyor…',false);
- navigator.geolocation.getCurrentPosition(function(p){
-   state.lat=p.coords.latitude;state.lon=p.coords.longitude;q('#locBtn').classList.remove('loading');drawMe();loadWeather();loadPlaces();
- },function(e){console.error(e);q('#locBtn').classList.remove('loading');toast('Konum izni gerekli',true)},{enableHighAccuracy:true,timeout:15000,maximumAge:30000});
+  if(!navigator.geolocation){notice('Tarayıcın konumu desteklemiyor',true);return}
+  q('#locBtn').classList.add('loading');notice('Konum alınıyor',false);
+  navigator.geolocation.getCurrentPosition(function(p){
+    state.lat=p.coords.latitude;state.lon=p.coords.longitude;
+    drawUser();loadWeather();loadPlaces();
+  },function(e){
+    console.error(e);q('#locBtn').classList.remove('loading');notice('Konum izni gerekli',true);
+  },{enableHighAccuracy:true,timeout:15000,maximumAge:30000});
 }
-function toggleSheet(force){
- var s=q('#sheet'),open=typeof force==='boolean'?force:!s.classList.contains('open');s.classList.toggle('open',open);q('#expand').textContent=open?'⌄':'⌃';
+function setSheet(open){
+  q('#sheet').classList.toggle('open',open);
+  q('#expand').textContent=open?'⌄':'⌃';
 }
-q('#locBtn').addEventListener('click',locate);
-q('#handle').addEventListener('click',function(){toggleSheet()});
-q('#expand').addEventListener('click',function(){toggleSheet()});
-q('#search').addEventListener('input',function(e){state.query=e.target.value.trim();render();if(state.query)toggleSheet(true)});
-q('#favToggle').addEventListener('click',function(){state.showFav=!state.showFav;render();toggleSheet(true)});
-qa('.chip').forEach(function(b){b.addEventListener('click',function(){qa('.chip').forEach(function(x){x.classList.remove('active')});b.classList.add('active');state.cat=b.dataset.cat;state.showFav=false;render();toggleSheet(state.cat!=='nearby')})});
-qa('.radius button').forEach(function(b){b.addEventListener('click',function(){qa('.radius button').forEach(function(x){x.classList.remove('active')});b.classList.add('active');state.radius=+b.dataset.r;if(state.lat!==null){drawMe();loadPlaces()}})});
-document.addEventListener('click',function(e){
- var route=e.target.closest('.route-btn');
- if(route){
-   e.stopPropagation();
-   var rid=decodeURIComponent(route.dataset.id),rp=state.items.find(function(i){return i.id===rid})||state.favorites.find(function(i){return i.id===rid});
-   if(rp)window.open('https://www.google.com/maps/dir/?api=1&destination='+rp.lat+','+rp.lon,'_blank','noopener');
-   return;
- }
- var mapBtn=e.target.closest('.map-btn');
- if(mapBtn){
-   e.stopPropagation();
-   var mid=decodeURIComponent(mapBtn.dataset.id),mp=state.items.find(function(i){return i.id===mid})||state.favorites.find(function(i){return i.id===mid});
-   if(mp){map.setView([mp.lat,mp.lon],17);toggleSheet(false);}
-   return;
- }
- var fav=e.target.closest('.fav-btn');
- if(fav){e.stopPropagation();var id=decodeURIComponent(fav.dataset.id),x=state.items.find(function(i){return i.id===id})||state.favorites.find(function(i){return i.id===id});if(!x)return;var n=state.favorites.findIndex(function(i){return i.id===id});if(n>=0)state.favorites.splice(n,1);else state.favorites.push(x);localStorage.setItem('kr_favs',JSON.stringify(state.favorites));render();return}
- var place=e.target.closest('.place');
- if(place){var pid=decodeURIComponent(place.dataset.place),p=state.items.find(function(i){return i.id===pid})||state.favorites.find(function(i){return i.id===pid});if(p){map.setView([p.lat,p.lon],17);toggleSheet(false)}}
+async function remoteSearch(term){
+  if(state.lat===null||term.length<3){state.searchItems=[];render();return}
+  if(searchAbort)searchAbort.abort();
+  searchAbort=new AbortController();
+  try{
+    var delta=.025;
+    var viewbox=(state.lon-delta)+','+(state.lat+delta)+','+(state.lon+delta)+','+(state.lat-delta);
+    var url='https://nominatim.openstreetmap.org/search?format=jsonv2&limit=12&bounded=1&accept-language=tr&viewbox='+encodeURIComponent(viewbox)+'&q='+encodeURIComponent(term);
+    var res=await fetch(url,{signal:searchAbort.signal});
+    if(!res.ok)throw new Error('HTTP '+res.status);
+    var data=await res.json();
+    state.searchItems=data.map(function(x){
+      var la=parseFloat(x.lat),lo=parseFloat(x.lon),name=(x.name||String(x.display_name||'').split(',')[0]||'Yer');
+      return {id:'search|'+x.osm_type+'|'+x.osm_id,name:name,cat:'other',lat:la,lon:lo,dist:distance(state.lat,state.lon,la,lo)};
+    }).sort(function(a,b){return a.dist-b.dist});
+  }catch(e){if(e.name!=='AbortError')console.warn('Arama servisi',e&&e.message?e.message:e)}
+  render();
+}
+
+q('#locBtn').addEventListener('click',function(){
+  if(state.lat!==null){map.setView([state.lat,state.lon],16);return}
+  locate();
 });
+q('#handle').addEventListener('click',function(){setSheet(!q('#sheet').classList.contains('open'))});
+q('#expand').addEventListener('click',function(){setSheet(!q('#sheet').classList.contains('open'))});
+
+qa('.chip').forEach(function(btn){
+  btn.addEventListener('click',function(){
+    qa('.chip').forEach(function(x){x.classList.remove('active')});btn.classList.add('active');
+    state.cat=btn.dataset.cat;state.query='';state.searchItems=[];state.selectedId=null;q('#search').value='';
+    render();setSheet(state.cat!=='nearby');
+  });
+});
+
+q('#search').addEventListener('input',function(e){
+  state.query=e.target.value.trim();state.selectedId=null;
+  clearTimeout(searchTimer);
+  if(!state.query){state.searchItems=[];render();return}
+  render();setSheet(true);
+  searchTimer=setTimeout(function(){remoteSearch(state.query)},800);
+});
+
+document.addEventListener('click',function(e){
+  var fav=e.target.closest('.fav-btn');
+  if(fav){
+    e.stopPropagation();
+    var id=decodeURIComponent(fav.dataset.id),x=state.items.find(function(i){return i.id===id})||state.searchItems.find(function(i){return i.id===id});
+    if(!x)return;
+    var n=state.favorites.findIndex(function(i){return i.id===id});
+    if(n>=0)state.favorites.splice(n,1);else state.favorites.push(x);
+    localStorage.setItem('kr_favs',JSON.stringify(state.favorites));render();return;
+  }
+  var mapBtn=e.target.closest('.map-btn');
+  if(mapBtn){
+    e.stopPropagation();
+    var mid=decodeURIComponent(mapBtn.dataset.id),mp=state.items.find(function(i){return i.id===mid})||state.searchItems.find(function(i){return i.id===mid});
+    if(mp){state.selectedId=mp.id;map.setView([mp.lat,mp.lon],17);setSheet(false);renderSelectionOnly();}
+    return;
+  }
+  var route=e.target.closest('.route-btn');
+  if(route){
+    e.stopPropagation();
+    var rid=decodeURIComponent(route.dataset.id),rp=state.items.find(function(i){return i.id===rid})||state.searchItems.find(function(i){return i.id===rid});
+    if(rp)window.open('https://www.google.com/maps/dir/?api=1&destination='+rp.lat+','+rp.lon,'_blank','noopener');
+  }
+});
+
 if('serviceWorker' in navigator){navigator.serviceWorker.register('./sw.js').catch(function(){});}
 render();
-setTimeout(locate,450);
+setTimeout(locate,350);
 })();
 </script>
 </body>
