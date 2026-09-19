@@ -51,7 +51,7 @@ jobs:
                   "accuracy": 25
               })
               d.get(url)
-              time.sleep(12)
+              time.sleep(30)
 
               result = {
                   "title": d.title,
