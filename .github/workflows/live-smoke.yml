@@ -13,11 +13,11 @@ jobs:
     steps:
       - name: Wait for this commit to reach GitHub Pages
         env:
-          GH_TOKEN: \${{ github.token }}
+          GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          export SHA="\${GITHUB_SHA}"
-          API="https://api.github.com/repos/\${GITHUB_REPOSITORY}/actions/runs?per_page=30"
+          export SHA="${GITHUB_SHA}"
+          API="https://api.github.com/repos/${GITHUB_REPOSITORY}/actions/runs?per_page=30"
           for i in $(seq 1 36); do
             JSON=$(curl -fsSL -H "Authorization: Bearer $GH_TOKEN" -H "Accept: application/vnd.github+json" "$API")
             STATUS=$(python -c 'import json,sys,os; d=json.load(sys.stdin); sha=os.environ["SHA"]; xs=[r for r in d.get("workflow_runs",[]) if r.get("name")=="pages build and deployment" and r.get("head_sha")==sha]; print(xs[0].get("status","") if xs else "")' <<<"$JSON")
