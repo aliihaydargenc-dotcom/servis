@@ -4,7 +4,9 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#0f172a">
-<title>Konum Radar</title>\n<link rel="manifest" href="./manifest.webmanifest">\n<link rel="icon" href="./icon.svg" type="image/svg+xml">
+<title>Konum Radar</title>
+<link rel="manifest" href="./manifest.webmanifest">
+<link rel="icon" href="./icon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <style>
 :root{--bg:#f4f7fb;--card:#fff;--ink:#0f172a;--muted:#64748b;--line:#e2e8f0;--accent:#0f766e}
@@ -113,8 +115,8 @@ async function load(){
 }
 function visible(){return state.cat==='all'?state.items:state.items.filter(function(x){return x.cat===state.cat})}
 function card(x){
- var fav=state.favorites.some(function(f){return f.id===x.id});
- return '<div class="place"><div><h3>'+em[x.cat]+' '+esc(x.name)+'</h3><div class="meta">'+labels[x.cat]+' · '+fmt(x.dist)+'</div></div><button class="icon" onclick="fav(\\''+String(x.id).replace(/'/g,"\\'")+'\\')">'+(fav?'★':'☆')+'</button></div>';
+ var isFav=state.favorites.some(function(f){return f.id===x.id});
+ return '<div class="place"><div><h3>'+em[x.cat]+' '+esc(x.name)+'</h3><div class="meta">'+labels[x.cat]+' · '+fmt(x.dist)+'</div></div><button class="icon fav-btn" data-id="'+encodeURIComponent(x.id)+'">'+(isFav?'★':'☆')+'</button></div>';
 }
 function render(){
  var items=visible();state.markers.forEach(function(m){map.removeLayer(m)});state.markers=[];
@@ -143,6 +145,11 @@ function locate(){
   q('#locBtn').classList.remove('pulse');weather();load();
  },function(){q('#locBtn').classList.remove('pulse');status('Konum izni verilmedi. Tarayıcıdan konuma izin verip tekrar dokun.',true)},{enableHighAccuracy:true,timeout:12000,maximumAge:60000});
 }
+document.addEventListener('click',function(e){
+ var b=e.target.closest('.fav-btn');
+ if(!b)return;
+ window.fav(decodeURIComponent(b.dataset.id));
+});
 q('#locBtn').addEventListener('click',locate);
 qa('.chip').forEach(function(b){b.addEventListener('click',function(){qa('.chip').forEach(function(x){x.classList.remove('active')});b.classList.add('active');state.cat=b.dataset.cat;render()})});
 qa('.radius button').forEach(function(b){b.addEventListener('click',function(){qa('.radius button').forEach(function(x){x.classList.remove('active')});b.classList.add('active');state.radius=+b.dataset.r;if(state.lat!==null){if(radiusCircle)map.removeLayer(radiusCircle);radiusCircle=L.circle([state.lat,state.lon],{radius:state.radius,color:'#0f766e',weight:1,fillOpacity:.04}).addTo(map);map.fitBounds(radiusCircle.getBounds(),{padding:[20,20]});load()}})});
