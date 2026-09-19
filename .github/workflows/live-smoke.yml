@@ -36,7 +36,7 @@ jobs:
           curl -fLsS --retry 3 --retry-delay 2 "$URL" -o /tmp/live.html
           grep -q "Konum Radar" /tmp/live.html
           grep -q 'id="map"' /tmp/live.html
-          grep -q 'data-cat="nearby"' /tmp/live.html
+          grep -q 'id="chips"' /tmp/live.html
           grep -q "nominatim.openstreetmap.org" /tmp/live.html
 
       - name: Install Selenium
