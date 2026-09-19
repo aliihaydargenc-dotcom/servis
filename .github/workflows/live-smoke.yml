@@ -58,7 +58,7 @@ jobs:
           o.add_argument("--disable-dev-shm-usage")
           o.set_capability("goog:loggingPrefs",{"browser":"ALL"})
           d=webdriver.Chrome(options=o)
-          wait=WebDriverWait(d,60)
+          wait=WebDriverWait(d,75)
           report=[]
           def shot(name): d.save_screenshot('/tmp/konum-radar-'+name+'.png')
           def visible_control(selector):
@@ -71,6 +71,12 @@ jobs:
               assert visible_control('[data-action="locate"]'), 'Location CTA clipped'
               assert d.execute_script('return document.documentElement.scrollWidth<=innerWidth'), 'Mobile overflow'
               shot('mobile-initial')
+              for width,height in [(360,780),(412,915)]:
+                  d.execute_cdp_cmd("Emulation.setDeviceMetricsOverride",{"width":width,"height":height,"deviceScaleFactor":1,"mobile":True})
+                  assert visible_control('[data-action="locate"]'), 'Location button clipped at '+str(width)
+                  assert d.execute_script('return document.documentElement.scrollWidth<=innerWidth')
+                  shot('mobile-'+str(width))
+              d.execute_cdp_cmd("Emulation.setDeviceMetricsOverride",{"width":390,"height":844,"deviceScaleFactor":1,"mobile":True})
               report.append('390x844: initial layout, visible location CTA, map tiles PASS')
               d.find_element(By.ID,'searchInput').send_keys('Antalya')
               d.find_element(By.CSS_SELECTOR,'button[type="submit"]').click()
@@ -79,7 +85,7 @@ jobs:
               d.find_element(By.CSS_SELECTOR,'[data-area]').click()
               wait.until(lambda x:x.find_element(By.ID,'status').get_attribute('data-ready')=='true')
               assert len(d.find_elements(By.CSS_SELECTOR,'.place'))>0
-              assert len(d.find_elements(By.CSS_SELECTOR,'.place'))==len(d.find_elements(By.CSS_SELECTOR,'.poi'))
+              assert d.execute_script("return document.querySelectorAll('.poi').length+[...document.querySelectorAll('.clusterPin')].reduce((n,e)=>n+Number(e.dataset.count),0)")==len(d.find_elements(By.CSS_SELECTOR,'.place'))
               shot('mobile-results')
               d.find_element(By.ID,'expand').click()
               assert d.find_element(By.ID,'expand').get_attribute('aria-expanded')=='true'
@@ -93,10 +99,13 @@ jobs:
               wait.until(EC.presence_of_element_located((By.CSS_SELECTOR,'.leaflet-popup')))
               shot('mobile-place')
               report.append('Live city search, selected area, nearby data, category, marker popup, route URL PASS')
-              d.find_element(By.ID,'clearBtn').is_displayed()
+              d.find_element(By.ID,'searchInput').send_keys('test')
+              d.find_element(By.ID,'clearBtn').click()
+              assert d.find_element(By.ID,'searchInput').get_attribute('value')==''
               d.execute_cdp_cmd("Emulation.setDeviceMetricsOverride",{"width":1440,"height":960,"deviceScaleFactor":1,"mobile":False})
               d.refresh()
               wait.until(EC.presence_of_element_located((By.CSS_SELECTOR,'[data-action="locate"]')))
+              wait.until(lambda x:x.execute_script("return [...document.querySelectorAll('.leaflet-tile')].some(i=>i.complete&&i.naturalWidth>0)"))
               shot('desktop-initial')
               assert d.execute_script("return document.querySelector('.sidebar').getBoundingClientRect().width===400")
               d.execute_cdp_cmd('Browser.grantPermissions',{'origin':'https://aliihaydargenc-dotcom.github.io','permissions':['geolocation']})
@@ -110,6 +119,7 @@ jobs:
               assert not errors,errors
               print(json.dumps(report,ensure_ascii=False,indent=2))
           finally:
+              print('BROWSER_LOGS',json.dumps(d.get_log('browser'),ensure_ascii=False))
               shot('last-state')
               d.quit()
           PYTEST
