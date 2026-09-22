@@ -1,0 +1,14 @@
+{
+  "name": "Şehir Asistanı",
+  "short_name": "Şehir",
+  "description": "Trafik, eczane, hava, haber, piyasa, radyo ve küçük araçlar için kişisel PWA.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f5f7fb",
+  "theme_color": "#f5f7fb",
+  "lang": "tr",
+  "icons": [
+    {"src":"./icons/icon.svg","sizes":"any","type":"image/svg+xml","purpose":"any maskable"}
+  ]
+}
